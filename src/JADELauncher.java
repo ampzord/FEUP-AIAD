@@ -1,4 +1,3 @@
-import jade.core.Agent;
 import jade.core.Profile;
 import jade.core.ProfileImpl;
 import jade.core.Runtime;
@@ -21,7 +20,7 @@ public class JADELauncher {
 
 		AgentController ac1;
 		try {
-			ac1 = mainContainer.acceptNewAgent("name1", new Agent());
+			ac1 = mainContainer.acceptNewAgent("myRMA", new jade.tools.rma.rma());
 			ac1.start();
 		} catch (StaleProxyException e) {
 			e.printStackTrace();
