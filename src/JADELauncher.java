@@ -11,12 +11,19 @@ public class JADELauncher {
 		Runtime rt = Runtime.instance();
 
 		Profile p1 = new ProfileImpl();
-		//p1.setParameter(...);
 		ContainerController mainContainer = rt.createMainContainer(p1);
-		
+
 		Profile p2 = new ProfileImpl();
-		//p2.setParameter(...);
-		ContainerController container = rt.createAgentContainer(p2);
+		p2.setParameter(Profile.CONTAINER_NAME, "Venues");
+		ContainerController venues = rt.createAgentContainer(p2);
+
+		Profile p3 = new ProfileImpl();
+		p3.setParameter(Profile.CONTAINER_NAME, "Bands");
+		ContainerController bands = rt.createAgentContainer(p3);
+
+		Profile p4 = new ProfileImpl();
+		p4.setParameter(Profile.CONTAINER_NAME, "Spectators");
+		ContainerController spectators = rt.createAgentContainer(p4);
 
 		AgentController ac1;
 		try {
@@ -26,16 +33,36 @@ public class JADELauncher {
 			e.printStackTrace();
 		}
 
-		Object[] agentArgs = new Object[0];
+		/* INIT BANDS */
 		AgentController ac2;
 		try {
-			ac2 = container.createNewAgent("roomAgent", "agents.Room", agentArgs);
+			ac2 = bands.createNewAgent("band1", "agents.Band", new Object[0]);
+			ac2.start();
+			ac2 = bands.createNewAgent("band2", "agents.Band", new Object[0]);
 			ac2.start();
 		} catch (StaleProxyException e) {
 			e.printStackTrace();
 		}
 
-		//FIPAS
+		/* INIT VENUES */
+		AgentController ac3;
+		try {
+			ac3 = venues.createNewAgent("venue1", "agents.Venue", new Object[0]);
+			ac3.start();
+		} catch (StaleProxyException e) {
+			e.printStackTrace();
+		}
+
+		/* INIT SPECTATORS */
+		AgentController ac4;
+		try {
+			ac4 = venues.createNewAgent("spectator1", "agents.Spectator", new Object[0]);
+			ac4.start();
+		} catch (StaleProxyException e) {
+			e.printStackTrace();
+		}
+
+		/*/FIPAS
 		try {
 			ac2 = container.createNewAgent("NET_Initiator", "agents.FIPAContractNetInitiatorAgent", agentArgs);
 			ac2.start();
@@ -48,7 +75,7 @@ public class JADELauncher {
 			ac2.start();
 		} catch (StaleProxyException e) {
 			e.printStackTrace();
-		}
+		}*/
 	}
 
 }
