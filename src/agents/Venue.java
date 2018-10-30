@@ -157,10 +157,13 @@ public class Venue extends Agent {
         protected Vector prepareCfps(ACLMessage cfp) {
             Vector v = new Vector();
 
-            cfp.addReceiver(new AID("band1", false));
-            //cfp.addReceiver(new AID("a2", false));
-            //cfp.addReceiver(new AID("a3", false));
-            cfp.setContent("this is a call...");
+            for(int i=0; i<available_bands.length; i++) {
+                cfp.addReceiver(new AID(available_bands[i].getName().getLocalName(), false));
+            }
+            //attendance & min_genre_spectrum & max_genre_spectrum
+
+            String content = attendance + "_" + min_genre_spectrum + "_" + max_genre_spectrum;
+            cfp.setContent(content);
 
             v.add(cfp);
 
@@ -169,13 +172,15 @@ public class Venue extends Agent {
 
         protected void handleAllResponses(Vector responses, Vector acceptances) {
 
-            System.out.println("got " + responses.size() + " responses!");
+            System.out.println(getLocalName() + " got " + responses.size() + " responses!");
 
             //System.out.println("Resposta0: " + responses.get(0));
 
             try {
                 ACLMessage a = (ACLMessage) responses.get(0);
+                ACLMessage a1 = (ACLMessage) responses.get(1);
                 System.out.println(a.getContent());
+                System.out.println(a1.getContent());
             } catch (Exception e) {
                 System.out.println("fuck");
             }
