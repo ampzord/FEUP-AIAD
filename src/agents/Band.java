@@ -1,10 +1,12 @@
 package agents;
 import jade.core.Agent;
-import jade.core.behaviours.Behaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
+import jade.proto.ContractNetResponder;
 
 public class Band extends Agent {
 
@@ -41,7 +43,7 @@ public class Band extends Agent {
     public void setup() {
         registerToDFService();
 
-        addBehaviour(new WorkingBehaviour());
+        addBehaviour(new ReceiveVenueRequest(this, MessageTemplate.MatchPerformative(ACLMessage.CFP)));
         System.out.println(getLocalName() + ": starting to work");
     }
 
@@ -73,12 +75,32 @@ public class Band extends Agent {
         }
     }
 
-    class WorkingBehaviour extends Behaviour {
-        public void action() {
-            //System.out.println("lul");
+    class ReceiveVenueRequest extends ContractNetResponder {
+
+        public ReceiveVenueRequest(Agent a, MessageTemplate mt) {
+            super(a, mt);
         }
-        public boolean done() {
-            return true;
+
+
+        protected ACLMessage handleCfp(ACLMessage cfp) {
+            ACLMessage reply = cfp.createReply();
+            reply.setPerformative(ACLMessage.PROPOSE);
+            reply.setContent("I will do it for free!!!");
+            // ...
+            return reply;
+        }
+
+        protected void handleRejectProposal(ACLMessage cfp, ACLMessage propose, ACLMessage reject) {
+            System.out.println(myAgent.getLocalName() + " got a reject...");
+        }
+
+        protected ACLMessage handleAcceptProposal(ACLMessage cfp, ACLMessage propose, ACLMessage accept) {
+            System.out.println(myAgent.getLocalName() + " got an accept!");
+            ACLMessage result = accept.createReply();
+            result.setPerformative(ACLMessage.INFORM);
+            result.setContent("this is the result");
+
+            return result;
         }
     }
 }

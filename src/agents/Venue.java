@@ -1,11 +1,15 @@
 package agents;
 import java.util.ArrayList;
+import java.util.Vector;
+
+import jade.core.AID;
 import jade.core.Agent;
-import jade.core.behaviours.Behaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
+import jade.lang.acl.ACLMessage;
+import jade.proto.ContractNetInitiator;
 import javafx.util.Pair;
 
 public class Venue extends Agent {
@@ -87,7 +91,11 @@ public class Venue extends Agent {
         registerToDFService();
         searchBands();
 
-        addBehaviour(new WorkingBehaviour());
+        //TODO: perguntar 'as bandas as cenas
+        //TODO: calcular quais bandas queremos
+        //TODO: contratar bandas
+
+        addBehaviour(new BandContractInitiator(this, new ACLMessage(ACLMessage.CFP)));
         System.out.println(getLocalName() + ": starting to work");
     }
 
@@ -140,15 +148,49 @@ public class Venue extends Agent {
         }
     }
 
-    class WorkingBehaviour extends Behaviour {
-        private int n = 0;
-       
-        public void action() {
-            //System.out.println(++n + " doing something");
+    class BandContractInitiator extends ContractNetInitiator {
+
+        public BandContractInitiator(Agent a, ACLMessage msg) {
+            super(a, msg);
         }
-       
-        public boolean done() {
-            return n == 3;
+
+        protected Vector prepareCfps(ACLMessage cfp) {
+            Vector v = new Vector();
+
+            cfp.addReceiver(new AID("band1", false));
+            //cfp.addReceiver(new AID("a2", false));
+            //cfp.addReceiver(new AID("a3", false));
+            cfp.setContent("this is a call...");
+
+            v.add(cfp);
+
+            return v;
+        }
+
+        protected void handleAllResponses(Vector responses, Vector acceptances) {
+
+            System.out.println("got " + responses.size() + " responses!");
+
+            //System.out.println("Resposta0: " + responses.get(0));
+
+            try {
+                ACLMessage a = (ACLMessage) responses.get(0);
+                System.out.println(a.getContent());
+            } catch (Exception e) {
+                System.out.println("fuck");
+            }
+            //System.out.println("Resposta1: " + responses.get(1));
+            //System.out.println("Resposta2: " + responses.get(2));
+
+            for(int i=0; i<responses.size(); i++) {
+                ACLMessage msg = ((ACLMessage) responses.get(i)).createReply();
+                msg.setPerformative(ACLMessage.ACCEPT_PROPOSAL); // OR NOT!
+                acceptances.add(msg);
+            }
+        }
+
+        protected void handleAllResultNotifications(Vector resultNotifications) {
+            System.out.println("got " + resultNotifications.size() + " result notifs!");
         }
     }
        
