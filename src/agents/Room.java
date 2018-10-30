@@ -13,9 +13,7 @@ public class Room extends Agent {
         addBehaviour(new WorkingBehaviour());
         System.out.println(getLocalName() + ": starting to work");
     }
-   
-   
-   
+
     public void setCapacity(int capacity) {
         this.capacity = capacity;
     }

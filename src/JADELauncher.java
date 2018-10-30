@@ -34,6 +34,21 @@ public class JADELauncher {
 		} catch (StaleProxyException e) {
 			e.printStackTrace();
 		}
+
+		//FIPAS
+		try {
+			ac2 = container.createNewAgent("NET_Initiator", "agents.FIPAContractNetInitiatorAgent", agentArgs);
+			ac2.start();
+		} catch (StaleProxyException e) {
+			e.printStackTrace();
+		}
+
+		try {
+			ac2 = container.createNewAgent("NET_Responder", "agents.FIPAContractNetResponderAgent", agentArgs);
+			ac2.start();
+		} catch (StaleProxyException e) {
+			e.printStackTrace();
+		}
 	}
 
 }
