@@ -34,6 +34,23 @@ public class Spectator extends Agent {
         this.location = location;
     }
 
+    public Spectator(int budget, int min_genre_spectrum, int max_genre_spectrum, int location) {
+        this.budget = budget;
+        this.min_genre_spectrum = min_genre_spectrum;
+        this.max_genre_spectrum = max_genre_spectrum;
+        this.location = location;
+    }
+
+
+    @Override
+    public String toString() {
+        return "Spectator - " +
+                "Budget=" + budget +
+                ", Minimum Genre Spectrum=" + min_genre_spectrum +
+                ", Maximum Genre Spectrum=" + max_genre_spectrum +
+                ", Location=" + location;
+    }
+
     public void setup() {
         addBehaviour(new WorkingBehaviour());
         System.out.println(getLocalName() + ": starting to work");

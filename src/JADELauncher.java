@@ -1,3 +1,10 @@
+import agents.Band;
+import agents.Spectator;
+import agents.Venue;
+import utils.Utils;
+
+import java.io.IOException;
+
 import jade.core.Profile;
 import jade.core.ProfileImpl;
 import jade.core.Runtime;
@@ -7,7 +14,22 @@ import jade.wrapper.StaleProxyException;
 
 public class JADELauncher {
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
+
+		/* Read Files */
+		Utils.readFileBands(Utils.PATH_BANDS);
+		for (Band band : Utils.bandsList)
+			System.out.println(band.toString());
+
+		Utils.readFileVenues(Utils.PATH_VENUES);
+		for (Venue venue : Utils.venuesList)
+			System.out.println(venue.toString());
+
+		Utils.readFileSpectators(Utils.PATH_SPECTATORS);
+		for (Spectator spectator : Utils.spectatorsList)
+			System.out.println(spectator.toString());
+
+
 		Runtime rt = Runtime.instance();
 
 		Profile p1 = new ProfileImpl();
@@ -32,6 +54,7 @@ public class JADELauncher {
 		} catch (StaleProxyException e) {
 			e.printStackTrace();
 		}
+
 
 		/* INIT BANDS */
 		AgentController ac2;
@@ -62,7 +85,7 @@ public class JADELauncher {
 			e.printStackTrace();
 		}
 
-		/*/FIPAS
+		/*FIPAS
 		try {
 			ac2 = container.createNewAgent("NET_Initiator", "agents.FIPAContractNetInitiatorAgent", agentArgs);
 			ac2.start();

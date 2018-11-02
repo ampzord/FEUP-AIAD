@@ -25,6 +25,28 @@ public class Venue extends Agent {
     private ArrayList<Pair<String,Integer>> shows;
     private int location;
 
+    public Venue(int attendance, int budget, int min_genre_spectrum, int max_genre_spectrum, int min_acceptable_prestige, int max_acceptable_prestige, int location) {
+        this.attendance = attendance;
+        this.budget = budget;
+        this.min_genre_spectrum = min_genre_spectrum;
+        this.max_genre_spectrum = max_genre_spectrum;
+        this.min_acceptable_prestige = min_acceptable_prestige;
+        this.max_acceptable_prestige = max_acceptable_prestige;
+        this.location = location;
+    }
+
+    @Override
+    public String toString() {
+        return "Venue - " +
+                "Attendance=" + this.attendance
+                + ", Budget=" + this.budget
+                + ", Minimum Genre Spectrum=" + this.min_genre_spectrum
+                + ", Maximum Genre Spectrum=" + this.max_genre_spectrum
+                + ", Minimum Acceptable Prestige=" + this.min_acceptable_prestige
+                + ", Maximum Attendance Prestige=" + this.max_acceptable_prestige
+                + ", Location=" + this.location;
+    }
+
     public void setAttendance(int attendance) {
         this.attendance = attendance;
     }

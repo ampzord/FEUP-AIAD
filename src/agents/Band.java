@@ -15,6 +15,22 @@ public class Band extends Agent {
     private int min_price;
     private int min_attendance;
 
+    public Band(int genre, int prestige, int min_price, int min_attendance) {
+        this.genre = genre;
+        this.prestige = prestige;
+        this.min_price = min_price;
+        this.min_attendance = min_attendance;
+    }
+
+    @Override
+    public String toString() {
+        return "Band - "
+                + "Genre=" + this.genre
+                + ", Prestige=" + this.prestige
+                + ", Minimum Price=" + this.min_price
+                + ", Minimum Attendance=" + this.min_attendance;
+    }
+
     public int getGenre() {
         return genre;
     }
