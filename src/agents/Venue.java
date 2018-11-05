@@ -26,15 +26,12 @@ public class Venue extends Agent {
 
     @Override
     public String toString() {
-        return "Venue" + this.getAID().getLocalName()
-                + " Attendance=" + this.attendance
-                + ", Budget=" + this.budget
-                + ", Minimum Genre Spectrum=" + this.min_genre_spectrum
-                + ", Maximum Genre Spectrum=" + this.max_genre_spectrum
-                + ", Minimum Acceptable Prestige=" + this.min_acceptable_prestige
-                + ", Maximum Attendance Prestige=" + this.max_acceptable_prestige
-                + ", Location=" + this.location;
+        return String.format("Venue - %1$-15s", this.getAID().getLocalName())
+                + String.format(" Attendance=%s, Budget=%s, Min Genre Spectrum=%s, Max Genre Spectrum=%s, Min Accept Prestige=%s, Max Accept Prestige=%s, Location=%s",
+                this.attendance, this.budget, this.min_genre_spectrum, this.max_genre_spectrum, this.min_acceptable_prestige, this.max_acceptable_prestige, this.location);
     }
+
+
 
     public void setAttendance(int attendance) {
         this.attendance = attendance;
@@ -98,8 +95,9 @@ public class Venue extends Agent {
 
 
     public void setup() {
-
         registerToDFService();
+        setVenueInformation();
+        printVenueInformation();
         searchBands();
 
         //TODO: perguntar 'as bandas as cenas
@@ -108,6 +106,21 @@ public class Venue extends Agent {
 
         addBehaviour(new BandContractInitiator(this, new ACLMessage(ACLMessage.CFP)));
         System.out.println(getLocalName() + ": starting to work");
+
+    }
+
+    private void setVenueInformation() {
+        setAttendance((int)getArguments()[1]);
+        setBudget((int)getArguments()[2]);
+        setMin_genre_spectrum((int)getArguments()[3]);
+        setMax_genre_spectrum((int)getArguments()[4]);
+        setMin_acceptable_prestige((int)getArguments()[5]);
+        setMax_acceptable_prestige((int)getArguments()[6]);
+        setLocation((int)getArguments()[7]);
+    }
+
+    private void printVenueInformation() {
+        System.out.println(this.toString());
     }
 
     private void searchBands() {

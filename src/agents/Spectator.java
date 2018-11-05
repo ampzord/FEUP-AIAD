@@ -11,10 +11,10 @@ public class Spectator extends Agent {
 
     @Override
     public String toString() {
-        return "Spectator" + this.getAID().getLocalName()
-                + "Budget=" + budget
-                + ", Minimum Genre Spectrum=" + min_genre_spectrum
-                + ", Maximum Genre Spectrum=" + max_genre_spectrum
+        return  this.getAID().getLocalName()
+                + " Budget=" + budget
+                + ", Min Genre Spectrum=" + min_genre_spectrum
+                + ", Max Genre Spectrum=" + max_genre_spectrum
                 + ", Location=" + location;
     }
 
@@ -44,9 +44,26 @@ public class Spectator extends Agent {
     }
 
     public void setup() {
+        setSpectatorInformation();
+        printSpectatorInformation();
+
         addBehaviour(new WorkingBehaviour());
+
         System.out.println(getLocalName() + ": starting to work");
     }
+
+
+    private void setSpectatorInformation() {
+        setBudget((int)getArguments()[0]);
+        setMin_genre_spectrum((int)getArguments()[1]);
+        setMax_genre_spectrum((int)getArguments()[2]);
+        setLocation((int)getArguments()[3]);
+    }
+
+    private void printSpectatorInformation() {
+        System.out.println(this.toString());
+    }
+
 
     public void takeDown() {
         System.out.println(getLocalName() + ": done working");
