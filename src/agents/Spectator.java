@@ -9,6 +9,15 @@ public class Spectator extends Agent {
     private int max_genre_spectrum;
     private int location;
 
+    @Override
+    public String toString() {
+        return "Spectator" + this.getAID().getLocalName()
+                + "Budget=" + budget
+                + ", Minimum Genre Spectrum=" + min_genre_spectrum
+                + ", Maximum Genre Spectrum=" + max_genre_spectrum
+                + ", Location=" + location;
+    }
+
     public int getBudget() {
         return budget;
     }
@@ -32,23 +41,6 @@ public class Spectator extends Agent {
     }
     public void setLocation(int location) {
         this.location = location;
-    }
-
-    public Spectator(int budget, int min_genre_spectrum, int max_genre_spectrum, int location) {
-        this.budget = budget;
-        this.min_genre_spectrum = min_genre_spectrum;
-        this.max_genre_spectrum = max_genre_spectrum;
-        this.location = location;
-    }
-
-
-    @Override
-    public String toString() {
-        return "Spectator - " +
-                "Budget=" + budget +
-                ", Minimum Genre Spectrum=" + min_genre_spectrum +
-                ", Maximum Genre Spectrum=" + max_genre_spectrum +
-                ", Location=" + location;
     }
 
     public void setup() {

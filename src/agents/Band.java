@@ -15,17 +15,12 @@ public class Band extends Agent {
     private int min_price;
     private int min_attendance;
 
-    public Band(int genre, int prestige, int min_price, int min_attendance) {
-        this.genre = genre;
-        this.prestige = prestige;
-        this.min_price = min_price;
-        this.min_attendance = min_attendance;
-    }
-
     @Override
     public String toString() {
-        return "Band - "
-                + "Genre=" + this.genre
+
+        return
+                "Band " + this.getAID().getLocalName()
+                + " Genre=" + this.genre
                 + ", Prestige=" + this.prestige
                 + ", Minimum Price=" + this.min_price
                 + ", Minimum Attendance=" + this.min_attendance;
@@ -59,8 +54,15 @@ public class Band extends Agent {
     public void setup() {
         registerToDFService();
 
+        setGenre((int)getArguments()[1]);
+        setPrestige((int)getArguments()[2]);
+        setMin_price((int)getArguments()[3]);
+        setMin_attendance((int)getArguments()[4]);
+
         addBehaviour(new ReceiveVenueRequest(this, MessageTemplate.MatchPerformative(ACLMessage.CFP)));
         System.out.println(getLocalName() + ": starting to work");
+
+        System.out.println(toString());
     }
 
     private void registerToDFService() {

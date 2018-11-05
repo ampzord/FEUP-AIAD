@@ -1,34 +1,15 @@
-import agents.Band;
-import agents.Spectator;
-import agents.Venue;
-import utils.Utils;
-
-import java.io.IOException;
-
 import jade.core.Profile;
 import jade.core.ProfileImpl;
 import jade.core.Runtime;
 import jade.wrapper.AgentController;
 import jade.wrapper.ContainerController;
 import jade.wrapper.StaleProxyException;
+import utils.Utils;
+import java.io.IOException;
 
 public class JADELauncher {
 
 	public static void main(String[] args) throws IOException {
-
-		/* Read Files */
-		Utils.readFileBands(Utils.PATH_BANDS);
-		for (Band band : Utils.bandsList)
-			System.out.println(band.toString());
-
-		Utils.readFileVenues(Utils.PATH_VENUES);
-		for (Venue venue : Utils.venuesList)
-			System.out.println(venue.toString());
-
-		Utils.readFileSpectators(Utils.PATH_SPECTATORS);
-		for (Spectator spectator : Utils.spectatorsList)
-			System.out.println(spectator.toString());
-
 
 		Runtime rt = Runtime.instance();
 
@@ -55,14 +36,15 @@ public class JADELauncher {
 			e.printStackTrace();
 		}
 
-
 		/* INIT BANDS */
 		AgentController ac2;
 		try {
-			ac2 = bands.createNewAgent("band1", "agents.Band", new Object[0]);
-			ac2.start();
-			ac2 = bands.createNewAgent("band2", "agents.Band", new Object[0]);
-			ac2.start();
+			Utils.readFileBands(Utils.PATH_BANDS);
+			for (Object[] band : Utils.bandsInformation) {
+				ac2 = bands.createNewAgent((String) band[0], "agents.Band", band);
+				ac2.start();
+			}
+
 		} catch (StaleProxyException e) {
 			e.printStackTrace();
 		}
@@ -70,8 +52,12 @@ public class JADELauncher {
 		/* INIT VENUES */
 		AgentController ac3;
 		try {
-			ac3 = venues.createNewAgent("venue1", "agents.Venue", new Object[0]);
-			ac3.start();
+			Utils.readFileVenues(Utils.PATH_VENUES);
+			for (Object[] venue : Utils.venuesInformation) {
+				ac3 = venues.createNewAgent((String) venue[0], "agents.Venue", venue);
+				ac3.start();
+			}
+
 		} catch (StaleProxyException e) {
 			e.printStackTrace();
 		}
@@ -79,20 +65,24 @@ public class JADELauncher {
 		/* INIT SPECTATORS */
 		AgentController ac4;
 		try {
-			ac4 = venues.createNewAgent("spectator1", "agents.Spectator", new Object[0]);
-			ac4.start();
+			Utils.readFileSpectators(Utils.PATH_SPECTATORS);
+			for (int i = 0; i < Utils.spectatorsInformation.size(); i++) {
+				String spectatorName = "Spectator" + ++i;
+				ac4 = spectators.createNewAgent(spectatorName, "agents.Spectator", Utils.spectatorsInformation.get(i));
+				ac4.start();
+			}
+
 		} catch (StaleProxyException e) {
 			e.printStackTrace();
 		}
 
-		/*FIPAS
+		/*/FIPAS
 		try {
 			ac2 = container.createNewAgent("NET_Initiator", "agents.FIPAContractNetInitiatorAgent", agentArgs);
 			ac2.start();
 		} catch (StaleProxyException e) {
 			e.printStackTrace();
 		}
-
 		try {
 			ac2 = container.createNewAgent("NET_Responder", "agents.FIPAContractNetResponderAgent", agentArgs);
 			ac2.start();
