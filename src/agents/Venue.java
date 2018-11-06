@@ -1,5 +1,6 @@
 package agents;
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.Vector;
 import jade.core.AID;
 import jade.core.Agent;
@@ -20,7 +21,8 @@ public class Venue extends Agent {
     private int min_acceptable_prestige;
     private int max_acceptable_prestige;
     private DFAgentDescription[] available_bands;
-    private ArrayList<String> wanted_bands;
+    private ArrayList<String> possible_bands;
+    private ArrayList<String> venue_proposal;
     private ArrayList<Pair<String,Integer>> shows;
     private int location;
 
@@ -72,11 +74,17 @@ public class Venue extends Agent {
     }
     public void setAvailable_bands(DFAgentDescription[] available_bands) {
         this.available_bands = available_bands;
-    }    public ArrayList<String> getWanted_bands() {
-        return wanted_bands;
+    }    public ArrayList<String> getPossible_bands() {
+        return possible_bands;
     }
-    public void setWanted_bands(ArrayList<String> wanted_bands) {
-        this.wanted_bands = wanted_bands;
+    public void setPossible_bands(ArrayList<String> possible_bands) {
+        this.possible_bands = possible_bands;
+    }
+    public ArrayList<String> getVenue_proposal() {
+        return venue_proposal;
+    }
+    public void setVenue_proposal(ArrayList<String> venue_proposal) {
+        this.venue_proposal = venue_proposal;
     }
     public ArrayList<Pair<String, Integer>> getShows() {
         return shows;
@@ -104,7 +112,7 @@ public class Venue extends Agent {
         //TODO: contratar bandas
 
         addBehaviour(new BandContractInitiator(this, new ACLMessage(ACLMessage.CFP)));
-        System.out.println(getLocalName() + ": starting to work");
+        //System.out.println(getLocalName() + ": starting to work");
 
     }
 
@@ -171,6 +179,9 @@ public class Venue extends Agent {
         }
     }
 
+    /*
+    *   Contact all bands to start decisions
+    * */
     class BandContractInitiator extends ContractNetInitiator {
 
         public BandContractInitiator(Agent a, ACLMessage msg) {
@@ -185,7 +196,7 @@ public class Venue extends Agent {
             }
             //attendance & min_genre_spectrum & max_genre_spectrum
 
-            String content = attendance + "_" + min_genre_spectrum + "_" + max_genre_spectrum;
+            String content = attendance + "::" + min_genre_spectrum + "::" + max_genre_spectrum;
             cfp.setContent(content);
 
             v.add(cfp);
@@ -197,23 +208,36 @@ public class Venue extends Agent {
 
             System.out.println(getLocalName() + " got " + responses.size() + " responses!");
 
-            //System.out.println("Resposta0: " + responses.get(0));
-
-            try {
-                ACLMessage a = (ACLMessage) responses.get(0);
-                ACLMessage a1 = (ACLMessage) responses.get(1);
-                System.out.println(a.getContent());
-                System.out.println(a1.getContent());
-            } catch (Exception e) {
-                System.out.println("fuck");
+            for (int i=0; i<responses.size(); i++) {
+                ACLMessage rsp;
+                if (!responses.get(i).equals("Your proposal doesn't fit our requirements")) {
+                    rsp = (ACLMessage) responses.get(i);
+                    System.out.println(rsp);
+                    possible_bands.add(rsp.getSender().getLocalName());
+                }
             }
-            //System.out.println("Resposta1: " + responses.get(1));
-            //System.out.println("Resposta2: " + responses.get(2));
 
+            // TODO: algoritmo para escolher melhores shows
+            // placeholder pricee
+            String string = "Iron Maiden::5000";
+            venue_proposal.add(string);
+            String[] tokens = string.split("::");
+            String bandName = tokens[0];
+            int price = Integer.parseInt(tokens[1]);
+
+            //reply
             for(int i=0; i<responses.size(); i++) {
-                ACLMessage msg = ((ACLMessage) responses.get(i)).createReply();
-                msg.setPerformative(ACLMessage.ACCEPT_PROPOSAL); // OR NOT!
-                acceptances.add(msg);
+                ACLMessage rsp = (ACLMessage) responses.get(i);
+                if (rsp.getSender().getLocalName().equals(bandName)) {
+                    ACLMessage msg = ((ACLMessage) responses.get(i)).createReply();
+                    msg.setPerformative(ACLMessage.ACCEPT_PROPOSAL); // OR NOT!
+                    msg.setContent(venue_proposal.get(0));
+                    acceptances.add(msg);
+                } else {
+                    ACLMessage msg = ((ACLMessage) responses.get(i)).createReply();
+                    msg.setPerformative(ACLMessage.REJECT_PROPOSAL); // OR NOT!
+                    acceptances.add(msg);
+                }
             }
         }
 

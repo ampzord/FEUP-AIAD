@@ -49,7 +49,7 @@ public class Spectator extends Agent {
 
         addBehaviour(new WorkingBehaviour());
 
-        System.out.println(getLocalName() + ": starting to work");
+        //System.out.println(getLocalName() + ": starting to work");
     }
 
 

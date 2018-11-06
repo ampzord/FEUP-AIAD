@@ -10,6 +10,8 @@ public class Utils {
     public static ArrayList<Object[]> venuesInformation;
     public final static String PATH_SPECTATORS = "./input/spectators.txt";
     public static ArrayList<Object[]> spectatorsInformation;
+    public final static int ITENERATION_COST_PER_DISTANCE = 10;
+    public final static int MAX_SHOWS_PER_BAND = 1;
 
     public Utils() {
     }
