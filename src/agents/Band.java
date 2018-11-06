@@ -76,6 +76,7 @@ public class Band extends Agent {
         setMin_price((int)getArguments()[3]);
         setMin_attendance((int)getArguments()[4]);
         setCurrent_shows(0);
+        all_proposals = new ArrayList<>();
     }
 
     private void printBandInformation() {

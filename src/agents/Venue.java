@@ -123,6 +123,9 @@ public class Venue extends Agent {
         setMax_genre_spectrum((int)getArguments()[4]);
         setMin_acceptable_prestige((int)getArguments()[5]);
         setMax_acceptable_prestige((int)getArguments()[6]);
+        possible_bands = new ArrayList<>();
+        venue_proposal = new ArrayList<>();
+        shows = new ArrayList<>();
         setLocation((int)getArguments()[7]);
     }
 
@@ -209,10 +212,8 @@ public class Venue extends Agent {
             System.out.println(getLocalName() + " got " + responses.size() + " responses!");
 
             for (int i=0; i<responses.size(); i++) {
-                ACLMessage rsp;
                 if (!responses.get(i).equals("Your proposal doesn't fit our requirements")) {
-                    rsp = (ACLMessage) responses.get(i);
-                    System.out.println(rsp);
+                    ACLMessage rsp = (ACLMessage) responses.get(0);
                     possible_bands.add(rsp.getSender().getLocalName());
                 }
             }
