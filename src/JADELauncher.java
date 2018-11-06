@@ -44,6 +44,7 @@ public class JADELauncher {
 				ac2 = bands.createNewAgent((String) band[0], "agents.Band", band);
 				ac2.start();
 			}
+			System.out.println("\n--- Bands ---\n");
 
 		} catch (StaleProxyException e) {
 			e.printStackTrace();
@@ -53,10 +54,12 @@ public class JADELauncher {
 		AgentController ac3;
 		try {
 			Utils.readFileVenues(Utils.PATH_VENUES);
+
 			for (Object[] venue : Utils.venuesInformation) {
 				ac3 = venues.createNewAgent((String) venue[0], "agents.Venue", venue);
 				ac3.start();
 			}
+			System.out.println("\n--- Venues ---\n");
 
 		} catch (StaleProxyException e) {
 			e.printStackTrace();
@@ -66,11 +69,13 @@ public class JADELauncher {
 		AgentController ac4;
 		try {
 			Utils.readFileSpectators(Utils.PATH_SPECTATORS);
+
 			for (int i = 0; i < Utils.spectatorsInformation.size(); i++) {
 				String spectatorName = "Spectator" + ++i;
 				ac4 = spectators.createNewAgent(spectatorName, "agents.Spectator", Utils.spectatorsInformation.get(i));
 				ac4.start();
 			}
+			System.out.println("\n--- Spectators ---\n");
 
 		} catch (StaleProxyException e) {
 			e.printStackTrace();
