@@ -193,9 +193,10 @@ public class Venue extends Agent {
 
         protected Vector prepareCfps(ACLMessage cfp) {
             Vector v = new Vector();
-
+            System.out.println();
             for(int i=0; i<available_bands.length; i++) {
                 cfp.addReceiver(new AID(available_bands[i].getName().getLocalName(), false));
+                System.out.println(getLocalName() + " - Sending Call For Proposal (CFP) to " + available_bands[i].getName().getLocalName());
             }
             //attendance & min_genre_spectrum & max_genre_spectrum
 
@@ -209,7 +210,7 @@ public class Venue extends Agent {
 
         protected void handleAllResponses(Vector responses, Vector acceptances) {
 
-            System.out.println(getLocalName() + " got " + responses.size() + " responses!");
+            System.out.println("\n" + getLocalName() + " got " + responses.size() + " responses!");
 
             for (int i=0; i<responses.size(); i++) {
                 if (!responses.get(i).equals("Your proposal doesn't fit our requirements")) {
