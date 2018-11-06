@@ -48,9 +48,10 @@ public class Band extends Agent {
     }
 
     public void setup() {
-        registerToDFService();
         setBandInformation();
         printBandInformation();
+        registerToDFService();
+
 
 
         addBehaviour(new ReceiveVenueRequest(this, MessageTemplate.MatchPerformative(ACLMessage.CFP)));

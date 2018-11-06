@@ -31,8 +31,6 @@ public class Venue extends Agent {
                 this.attendance, this.budget, this.min_genre_spectrum, this.max_genre_spectrum, this.min_acceptable_prestige, this.max_acceptable_prestige, this.location);
     }
 
-
-
     public void setAttendance(int attendance) {
         this.attendance = attendance;
     }
@@ -95,9 +93,10 @@ public class Venue extends Agent {
 
 
     public void setup() {
-        registerToDFService();
         setVenueInformation();
         printVenueInformation();
+        registerToDFService();
+
         searchBands();
 
         //TODO: perguntar 'as bandas as cenas
