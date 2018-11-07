@@ -1,14 +1,15 @@
 package agents;
 import java.util.ArrayList;
-import java.util.Objects;
 import java.util.Vector;
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.Behaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
+import jade.proto.AchieveREInitiator;
 import jade.proto.ContractNetInitiator;
 import javafx.util.Pair;
 
@@ -25,6 +26,7 @@ public class Venue extends Agent {
     private ArrayList<String> venue_proposal;
     private ArrayList<Pair<String,Integer>> shows;
     private int location;
+    private int requests_done;
 
     @Override
     public String toString() {
@@ -112,9 +114,26 @@ public class Venue extends Agent {
         //TODO: calcular quais bandas queremos
         //TODO: contratar bandas
 
+        //get interested bands
+        addBehaviour(new BandGetter(this, new ACLMessage(ACLMessage.REQUEST)));
+
+        //addBehaviour(new WaitingForRequests());
+        System.out.println("time to decide");
+        /*
+        boolean looking_for_bands = true;
+        while (looking_for_bands) {
+            if (requests_done != possible_bands.size())
+                looking_for_bands = false;
+        }
+
+        System.out.println("got all requests");
+        */
+
+        /*
+        //hire bands
         addBehaviour(new BandContractInitiator(this, new ACLMessage(ACLMessage.CFP)));
         //System.out.println(getLocalName() + ": starting to work");
-
+        */
     }
 
     private void setVenueInformation() {
@@ -128,6 +147,7 @@ public class Venue extends Agent {
         venue_proposal = new ArrayList<>();
         shows = new ArrayList<>();
         setLocation((int)getArguments()[7]);
+        requests_done = 0;
     }
 
     private void printVenueInformation() {
@@ -183,8 +203,87 @@ public class Venue extends Agent {
         }
     }
 
+    /**
+     *  Band Getter
+     */
+    class BandGetter extends AchieveREInitiator {
+
+        public BandGetter(Agent a, ACLMessage msg) {
+            super(a, msg);
+        }
+
+        protected Vector<ACLMessage> prepareRequests(ACLMessage msg) {
+            Vector<ACLMessage> v = new Vector<>();
+
+            System.out.println();
+            for(int i=0; i<available_bands.length; i++) {
+                msg.addReceiver(new AID(available_bands[i].getName().getLocalName(), false));
+                //System.out.println(getLocalName() + " - Sending Request to " + available_bands[i].getName().getLocalName());
+            }
+
+            String content = attendance + "::" + min_genre_spectrum + "::" + max_genre_spectrum;
+            msg.setContent(content);
+
+            v.add(msg);
+
+            return v;
+        }
+
+        protected void handleAgree(ACLMessage agree) {
+            //System.out.println(getLocalName() + " received agree from " + agree.getSender().getLocalName());
+            requests_done++;
+        }
+
+        protected void handleRefuse(ACLMessage refuse) {
+            //System.out.println(getLocalName() + " received refuse from " + refuse.getSender().getLocalName());
+            requests_done++;
+        }
+
+        protected void handleInform(ACLMessage inform) {
+            System.out.println(getLocalName() + " received INFORM " + inform.getContent() + " from " + inform.getSender().getLocalName());
+            possible_bands.add(inform);
+        }
+
+        protected void handleFailure(ACLMessage failure) {
+            // nothing to see here
+        }
+
+    }
+
+
+    /**
+     *  Request Waiter
+     */
+    class WaitingForRequests extends Behaviour {
+
+        boolean have_all_responses;
+
+        public WaitingForRequests () {
+            have_all_responses = false;
+        }
+
+        @Override
+        public void action() {
+
+            boolean looking_for_bands = true;
+            while (looking_for_bands) {
+                if (requests_done != possible_bands.size())
+                    looking_for_bands = false;
+            }
+
+            System.out.println("got all requests");
+            have_all_responses = true;
+        }
+
+        @Override
+        public boolean done() {
+            return have_all_responses;
+        }
+    }
+
+
     /*
-    *   Contact all bands to start decisions
+    *   Band Hirer
     * */
     class BandContractInitiator extends ContractNetInitiator {
 
@@ -213,10 +312,9 @@ public class Venue extends Agent {
             System.out.println("\n" + getLocalName() + " got " + responses.size() + " responses!");
 
             for (int i=0; i<responses.size(); i++) {
-                if (!responses.get(i).equals("Your proposal doesn't fit our requirements")) {
-                    ACLMessage rsp = (ACLMessage) responses.get(0);
-
-                    String string = rsp.getContent();
+                ACLMessage rsp = (ACLMessage) responses.get(0);
+                String string = rsp.getContent();
+                if (!string.equals("Your proposal doesn't fit our requirements")) {
                     String[] tokens = string.split("::");
                     int min_price = Integer.parseInt(tokens[2]);
 

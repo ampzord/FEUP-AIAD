@@ -2,13 +2,17 @@ package agents;
 import jade.core.Agent;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.domain.FIPAAgentManagement.RefuseException;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import jade.proto.AchieveREResponder;
 import jade.proto.ContractNetResponder;
 import utils.Utils;
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
+
 import javafx.util.Pair;
 
 public class Band extends Agent {
@@ -19,6 +23,7 @@ public class Band extends Agent {
     private int min_attendance;
     private int current_shows;
     private ArrayList<Pair<String, Integer>> all_proposals;
+    private int business_cards_handed;
 
     @Override
     public String toString() {
@@ -63,11 +68,12 @@ public class Band extends Agent {
         printBandInformation();
         registerToDFService();
 
+        addBehaviour(new RequestResponder(this, MessageTemplate.MatchPerformative(ACLMessage.REQUEST)));
 
-
+        /*
         addBehaviour(new ReceiveVenueRequest(this, MessageTemplate.MatchPerformative(ACLMessage.CFP)));
         //System.out.println(getLocalName() + ": starting to work");
-
+        */
     }
 
     private void setBandInformation() {
@@ -77,6 +83,7 @@ public class Band extends Agent {
         setMin_attendance((int)getArguments()[4]);
         setCurrent_shows(0);
         all_proposals = new ArrayList<>();
+        business_cards_handed = 0;
     }
 
     private void printBandInformation() {
@@ -111,6 +118,53 @@ public class Band extends Agent {
         }
     }
 
+    /**
+     *  Venue request responder
+     */
+    class RequestResponder extends AchieveREResponder {
+
+        public RequestResponder(Agent a, MessageTemplate mt) {
+            super(a, mt);
+        }
+
+        protected ACLMessage handleRequest(ACLMessage request) throws RefuseException {
+            //System.out.println(getLocalName() + " received " + request.getContent() + " from " + request.getSender().getLocalName());
+
+            String[] tokens = request.getContent().split("::");
+            int attendance = Integer.parseInt(tokens[0]);
+            int min_genre_spectrum = Integer.parseInt(tokens[1]);
+            int max_genre_spectrum = Integer.parseInt(tokens[2]);
+
+            ACLMessage reply = request.createReply();
+            if (evaluateAcceptance(attendance, min_genre_spectrum, max_genre_spectrum) && current_shows < Utils.MAX_SHOWS_PER_BAND) {
+                reply.setPerformative(ACLMessage.AGREE);
+            } else
+                throw new RefuseException("Refused Request");
+
+            return reply;
+        }
+
+        private boolean evaluateAcceptance(int attendance, int min_genre_spectrum, int max_genre_spectrum) {
+            if (attendance >= min_attendance && min_genre_spectrum <= genre && genre <= max_genre_spectrum)
+                return true;
+            return false;
+        }
+
+        protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) {
+            ACLMessage result = request.createReply();
+            String content = getLocalName() + "::" + prestige + "::" + min_price;
+            result.setContent(content);
+            result.setPerformative(ACLMessage.INFORM);
+            business_cards_handed++;
+
+            return result;
+        }
+
+    }
+
+    /**
+     *  Venue negotiation
+     */
     class ReceiveVenueRequest extends ContractNetResponder {
 
         public ReceiveVenueRequest(Agent a, MessageTemplate mt) {
@@ -131,6 +185,7 @@ public class Band extends Agent {
 
                 String content = getLocalName() + "::" + prestige + "::" + min_price;
                 reply.setContent(content);
+                business_cards_handed++;
             } else {
                 reply.setPerformative(ACLMessage.REFUSE);
                 reply.setContent("Your proposal doesn't fit our requirements");
@@ -147,6 +202,7 @@ public class Band extends Agent {
 
         protected void handleRejectProposal(ACLMessage cfp, ACLMessage propose, ACLMessage reject) {
             System.out.println(myAgent.getLocalName() + " got a reject from " + reject.getSender().getLocalName());
+            business_cards_handed--;
         }
 
         protected ACLMessage handleAcceptProposal(ACLMessage cfp, ACLMessage propose, ACLMessage accept) {
@@ -160,6 +216,15 @@ public class Band extends Agent {
             all_proposals.add(pair);
 
             //wait for all proposals
+            System.out.println(getAID().getLocalName() + " is waiting for " + business_cards_handed + " proposals, currently have " + all_proposals.size());
+            while (business_cards_handed != all_proposals.size()) {
+                System.out.println(getAID().getLocalName() + " is waiting for more proposals");
+                try {
+                    TimeUnit.SECONDS.sleep(3);
+                } catch (Exception e) {
+                    System.out.println("band waiter is kaput");
+                }
+            }
 
             int max = min_price;
             int max_pos = 0;
