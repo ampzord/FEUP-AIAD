@@ -117,18 +117,6 @@ public class Venue extends Agent {
         //get interested bands
         addBehaviour(new BandGetter(this, new ACLMessage(ACLMessage.REQUEST)));
 
-        //addBehaviour(new WaitingForRequests());
-        System.out.println("time to decide");
-        /*
-        boolean looking_for_bands = true;
-        while (looking_for_bands) {
-            if (requests_done != possible_bands.size())
-                looking_for_bands = false;
-        }
-
-        System.out.println("got all requests");
-        */
-
         /*
         //hire bands
         addBehaviour(new BandContractInitiator(this, new ACLMessage(ACLMessage.CFP)));
@@ -257,37 +245,6 @@ public class Venue extends Agent {
             // nothing to see here
         }
 
-    }
-
-
-    /**
-     *  Request Waiter
-     */
-    class WaitingForRequests extends Behaviour {
-
-        boolean have_all_responses;
-
-        public WaitingForRequests () {
-            have_all_responses = false;
-        }
-
-        @Override
-        public void action() {
-
-            boolean looking_for_bands = true;
-            while (looking_for_bands) {
-                if (requests_done != possible_bands.size())
-                    looking_for_bands = false;
-            }
-
-            System.out.println("got all requests");
-            have_all_responses = true;
-        }
-
-        @Override
-        public boolean done() {
-            return have_all_responses;
-        }
     }
 
 
