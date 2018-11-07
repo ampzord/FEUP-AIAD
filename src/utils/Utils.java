@@ -23,7 +23,12 @@ public class Utils {
         bandsInformation = new ArrayList<>();
 
         try {
-            FileReader fileReader = new FileReader(filePath);
+
+            File f = new File(filePath);
+            if((!f.exists()) || (f.isDirectory()))
+                throw new FileNotFoundException();
+
+                FileReader fileReader = new FileReader(filePath);
             BufferedReader bufferedReader = new BufferedReader(fileReader);
 
             while((line = bufferedReader.readLine()) != null) {
@@ -36,6 +41,13 @@ public class Utils {
                 Object[] band = new Object[5];
 
                 String[] tokens = line.split(";");
+
+                if( (Integer.parseInt(tokens[1]) < 0) || (Integer.parseInt(tokens[1]) > 100)
+                        || (Integer.parseInt(tokens[2]) < 0) || (Integer.parseInt(tokens[2]) > 5)
+                        || (Integer.parseInt(tokens[3]) < 0)
+                        ||(Integer.parseInt(tokens[4]) < 0))
+                    throw new IOException();
+
                 band[0] = tokens[0];
                 band[1] = Integer.parseInt(tokens[1]);
                 band[2] = Integer.parseInt(tokens[2]);
@@ -48,10 +60,12 @@ public class Utils {
             bufferedReader.close();
         }
         catch(FileNotFoundException ex) {
+            ex.printStackTrace();
             System.out.println("Unable to open file '" + filePath + "'");
         }
         catch(IOException ex) {
             ex.printStackTrace();
+            System.out.println("Invalid Band information provided.");
         }
     }
 
@@ -60,6 +74,11 @@ public class Utils {
         int aux = 0;
 
         try {
+
+            File f = new File(filePath);
+            if((!f.exists()) || (f.isDirectory()))
+                throw new FileNotFoundException();
+
             FileReader fileReader = new FileReader(filePath);
             BufferedReader bufferedReader = new BufferedReader(fileReader);
             venuesInformation = new ArrayList<>();
@@ -73,6 +92,16 @@ public class Utils {
 
                 Object[] venue = new Object[8];
                 String[] tokens = line.split(";");
+
+                if((Integer.parseInt(tokens[1]) < 0)
+                        || (Integer.parseInt(tokens[2]) < 0)
+                        || (Integer.parseInt(tokens[3]) < 0) || (Integer.parseInt(tokens[3]) > 100)
+                        || (Integer.parseInt(tokens[4]) < 0) || (Integer.parseInt(tokens[4]) > 100)
+                        || (Integer.parseInt(tokens[5]) < 0) || (Integer.parseInt(tokens[5]) > 5)
+                        || (Integer.parseInt(tokens[6]) < 0) || (Integer.parseInt(tokens[6]) > 5)
+                        || (Integer.parseInt(tokens[7]) < 0))
+                    throw new IOException();
+
                 venue[0] = tokens[0];
                 venue[1] = Integer.parseInt(tokens[1]);
                 venue[2] = Integer.parseInt(tokens[2]);
@@ -87,10 +116,12 @@ public class Utils {
             bufferedReader.close();
         }
         catch(FileNotFoundException ex) {
+            ex.printStackTrace();
             System.out.println("Unable to open file '" + filePath + "'");
         }
         catch(IOException ex) {
             ex.printStackTrace();
+            System.out.println("Invalid Venue information provided.");
         }
     }
 
@@ -99,6 +130,11 @@ public class Utils {
         int aux = 0;
 
         try {
+
+            File f = new File(filePath);
+            if((!f.exists()) || (f.isDirectory()))
+                throw new FileNotFoundException();
+
             FileReader fileReader = new FileReader(filePath);
             BufferedReader bufferedReader = new BufferedReader(fileReader);
             spectatorsInformation = new ArrayList<>();
@@ -111,6 +147,13 @@ public class Utils {
 
                 Object[] spectator = new Object[4];
                 String[] tokens = line.split(";");
+
+                if( (Integer.parseInt(tokens[1]) < 0)
+                        || (Integer.parseInt(tokens[2]) < 0 ) || (Integer.parseInt(tokens[2]) > 100)
+                        || (Integer.parseInt(tokens[3]) < 0) || (Integer.parseInt(tokens[3]) > 100)
+                        || (Integer.parseInt(tokens[4]) < 0 ))
+                    throw new IOException();
+
                 spectator[0] = Integer.parseInt(tokens[0]);
                 spectator[1] = Integer.parseInt(tokens[1]);
                 spectator[2] = Integer.parseInt(tokens[2]);
@@ -122,10 +165,12 @@ public class Utils {
             bufferedReader.close();
         }
         catch(FileNotFoundException ex) {
+            ex.printStackTrace();
             System.out.println("Unable to open file '" + filePath + "'");
         }
         catch(IOException ex) {
             ex.printStackTrace();
+            System.out.println("Invalid Spectator information provided.");
         }
     }
 }
