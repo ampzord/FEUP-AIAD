@@ -118,7 +118,7 @@ public class Band extends Agent {
         }
 
         protected ACLMessage handleCfp(ACLMessage cfp) {
-            //System.out.println(getAID().getLocalName() + " received " + cfp.getContent() + " from " + cfp.getSender().getLocalName());
+            System.out.println(getAID().getLocalName() + " received " + cfp.getContent() + " from " + cfp.getSender().getLocalName());
 
             String[] tokens = cfp.getContent().split("::");
             int attendance = Integer.parseInt(tokens[0]);
@@ -126,7 +126,7 @@ public class Band extends Agent {
             int max_genre_spectrum = Integer.parseInt(tokens[2]);
 
             ACLMessage reply = cfp.createReply();
-            if (evaluateAcceptance(attendance, min_genre_spectrum, max_genre_spectrum)) {
+            if (evaluateAcceptance(attendance, min_genre_spectrum, max_genre_spectrum) && current_shows < Utils.MAX_SHOWS_PER_BAND) {
                 reply.setPerformative(ACLMessage.PROPOSE);
 
                 String content = getLocalName() + "::" + prestige + "::" + min_price;

@@ -21,7 +21,7 @@ public class Venue extends Agent {
     private int min_acceptable_prestige;
     private int max_acceptable_prestige;
     private DFAgentDescription[] available_bands;
-    private ArrayList<String> possible_bands;
+    private ArrayList<ACLMessage> possible_bands;
     private ArrayList<String> venue_proposal;
     private ArrayList<Pair<String,Integer>> shows;
     private int location;
@@ -74,10 +74,11 @@ public class Venue extends Agent {
     }
     public void setAvailable_bands(DFAgentDescription[] available_bands) {
         this.available_bands = available_bands;
-    }    public ArrayList<String> getPossible_bands() {
+    }
+    public ArrayList<ACLMessage> getPossible_bands() {
         return possible_bands;
     }
-    public void setPossible_bands(ArrayList<String> possible_bands) {
+    public void setPossible_bands(ArrayList<ACLMessage> possible_bands) {
         this.possible_bands = possible_bands;
     }
     public ArrayList<String> getVenue_proposal() {
@@ -198,7 +199,6 @@ public class Venue extends Agent {
                 cfp.addReceiver(new AID(available_bands[i].getName().getLocalName(), false));
                 System.out.println(getLocalName() + " - Sending Call For Proposal (CFP) to " + available_bands[i].getName().getLocalName());
             }
-            //attendance & min_genre_spectrum & max_genre_spectrum
 
             String content = attendance + "::" + min_genre_spectrum + "::" + max_genre_spectrum;
             cfp.setContent(content);
@@ -215,12 +215,18 @@ public class Venue extends Agent {
             for (int i=0; i<responses.size(); i++) {
                 if (!responses.get(i).equals("Your proposal doesn't fit our requirements")) {
                     ACLMessage rsp = (ACLMessage) responses.get(0);
-                    possible_bands.add(rsp.getSender().getLocalName());
+
+                    String string = rsp.getContent();
+                    String[] tokens = string.split("::");
+                    int min_price = Integer.parseInt(tokens[2]);
+
+                    if (min_price <= budget)
+                        possible_bands.add(rsp);
                 }
             }
 
             // TODO: algoritmo para escolher melhores shows
-            // placeholder pricee
+            // placeholder price
             String string = "Iron Maiden::5000";
             venue_proposal.add(string);
             String[] tokens = string.split("::");
