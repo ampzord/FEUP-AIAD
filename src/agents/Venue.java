@@ -232,11 +232,20 @@ public class Venue extends Agent {
         protected void handleAgree(ACLMessage agree) {
             //System.out.println(getLocalName() + " received agree from " + agree.getSender().getLocalName());
             requests_done++;
+
+            if (available_bands.length == requests_done) {
+                System.out.println(getLocalName() + " - ta tudo meus bois " + requests_done);
+                //TODO: comecar aqui
+            }
         }
 
         protected void handleRefuse(ACLMessage refuse) {
             //System.out.println(getLocalName() + " received refuse from " + refuse.getSender().getLocalName());
             requests_done++;
+
+            if (available_bands.length == requests_done) {
+                System.out.println(getLocalName() + " - ta tudo meus bois" + requests_done);
+            }
         }
 
         protected void handleInform(ACLMessage inform) {
