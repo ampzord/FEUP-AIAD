@@ -9,6 +9,7 @@ public class Utils {
     public final static String PATH_VENUES = "./input/venues.txt";
     public static ArrayList<Object[]> venuesInformation;
     public final static String PATH_SPECTATORS = "./input/spectators.txt";
+
     public static ArrayList<Object[]> spectatorsInformation;
     public final static int ITENERATION_COST_PER_DISTANCE = 10;
     public final static int MAX_SHOWS_PER_BAND = 1;
@@ -87,7 +88,7 @@ public class Utils {
                     aux++; continue;
                 }
 
-                Object[] venue = new Object[8];
+                Object[] venue = new Object[9];
                 String[] tokens = line.split(";");
 
                 if (!validInputOfVenues(tokens))
@@ -101,6 +102,7 @@ public class Utils {
                 venue[5] = Integer.parseInt(tokens[5]);
                 venue[6] = Integer.parseInt(tokens[6]);
                 venue[7] = Integer.parseInt(tokens[7]);
+                venue[8] = tokens[8];
                 venuesInformation.add(venue);
             }
 
@@ -179,7 +181,8 @@ public class Utils {
                 && isValidBudget(Integer.parseInt(tokens[2]))
                 && isValidGenre(Integer.parseInt(tokens[3]), Integer.parseInt(tokens[4]))
                 && isValidPrestige(Integer.parseInt(tokens[5]), Integer.parseInt(tokens[6]))
-                && isValidLocation(Integer.parseInt(tokens[7])))
+                && isValidLocation(Integer.parseInt(tokens[7]))
+                && isValidVenueBehaviour(tokens[8]))
             return true;
         else {
             System.out.println("Error parsing input - venues.txt");
@@ -196,6 +199,16 @@ public class Utils {
             System.out.println("Error parsing input - spectators.txt");
             return false;
         }
+    }
+
+    private static boolean isValidVenueBehaviour(String behaviour) {
+        if (behaviour.equals("MOSTPROFIT") || behaviour.equals("MOSTPRESTIGE") || behaviour.equals("MOSTBANDS"))
+            return true;
+        else {
+            System.out.println("Error parsing input - Behaviour of value: " + behaviour);
+            return false;
+        }
+
     }
 
 
@@ -276,6 +289,7 @@ public class Utils {
             return false;
         }
     }
+
 }
 
 
