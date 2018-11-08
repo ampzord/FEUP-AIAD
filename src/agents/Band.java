@@ -148,7 +148,7 @@ public class Band extends Agent {
                     break;
 
                 case "Hiring":
-                    System.out.println("THEN GIB THE MONEIS!!!!");
+                    //System.out.println(getLocalName() + " says THEN GIB THE MONEIS!!!!");
 
                     int proposed_payment = Integer.parseInt(request.getContent());
                     all_proposals.add(new Pair<>(request.getSender().getLocalName(),proposed_payment));
@@ -190,6 +190,7 @@ public class Band extends Agent {
 
                     if (business_cards_handed == all_proposals.size()) {
                         // TODO: responder 'as venues
+                        System.out.println(getLocalName() + " RESPONDER A TODAS AS VENUES");
                         /* escolher os melhores shows e mandar "request" para as venues a aceitar as propostas*/
                         // addBehaviour(new Send());
                     }
