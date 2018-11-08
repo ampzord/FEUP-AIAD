@@ -13,13 +13,12 @@ import jade.lang.acl.ACLMessage;
 import jade.proto.AchieveREInitiator;
 import jade.proto.ContractNetInitiator;
 import javafx.util.Pair;
-import utils.Utils;
 
 import java.util.Random;
 
 public class Venue extends Agent {
 
-    public enum VenueBehaviours {
+    public enum VenueBehaviour {
         MOSTBANDS, MOSTPRESTIGE, MOSTPROFIT;
     }
    
@@ -35,7 +34,7 @@ public class Venue extends Agent {
     private ArrayList<Pair<String,Integer>> shows;
     private int location;
     private int requests_done;
-    private VenueBehaviours behaviour;
+    private VenueBehaviour behaviour;
 
 
 
@@ -150,15 +149,15 @@ public class Venue extends Agent {
     private void setBehaviour(String name) {
         switch (name) {
             case "MOSTBANDS":
-                behaviour = VenueBehaviours.MOSTBANDS;
+                behaviour = VenueBehaviour.MOSTBANDS;
                 break;
 
             case "MOSTPROFIT":
-                behaviour = VenueBehaviours.MOSTPROFIT;
+                behaviour = VenueBehaviour.MOSTPROFIT;
                 break;
 
             case "MOSTPRESTIGE":
-                behaviour = VenueBehaviours.MOSTPRESTIGE;
+                behaviour = VenueBehaviour.MOSTPRESTIGE;
                 break;
         }
     }
@@ -234,6 +233,7 @@ public class Venue extends Agent {
                 //System.out.println(getLocalName() + " - Sending Request to " + available_bands[i].getName().getLocalName());
             }
 
+            msg.setOntology("Give_BusinessCard");
             String content = attendance + "::" + min_genre_spectrum + "::" + max_genre_spectrum;
             msg.setContent(content);
 
@@ -249,6 +249,7 @@ public class Venue extends Agent {
             if (available_bands.length == requests_done) {
                 /* compute the best bands to hire */
                 addBehaviour(new HireBands((Venue)getAgent()));
+                requests_done = 0;
             }
         }
 
@@ -259,6 +260,7 @@ public class Venue extends Agent {
             if (available_bands.length == requests_done) {
                 /* compute the best bands to hire */
                 addBehaviour(new HireBands((Venue)getAgent()));
+                requests_done = 0;
             }
         }
 
@@ -344,24 +346,32 @@ public class Venue extends Agent {
             Vector<ACLMessage> v = new Vector<>();
 
             System.out.println();
-            for(int i=0; i<available_bands.length; i++) {
-                msg.addReceiver(new AID(available_bands[i].getName().getLocalName(), false));
-                //System.out.println(getLocalName() + " - Sending Request to " + available_bands[i].getName().getLocalName());
+            for(int i=0; i<venue_proposal.size(); i++) {
+                msg.addReceiver(new AID(venue_proposal.get(i).getSender().getLocalName(), false));
+                //System.out.println(getLocalName() + " hiring " + venue_proposal.get(i).getSender().getLocalName() + " for " + venue_proposal.get(i).getContent());
+                msg.setOntology("Hiring");
+                msg.setContent(venue_proposal.get(i).getContent());
+                v.add(msg);
             }
-
-            String content = attendance + "::" + min_genre_spectrum + "::" + max_genre_spectrum;
-            msg.setContent(content);
-
-            v.add(msg);
 
             return v;
         }
 
         protected void handleAgree(ACLMessage agree) {
+            requests_done++;
 
+            if (venue_proposal.size() == requests_done) {
+                /* CREATE SHOW */
+                requests_done = 0;
+            }
         }
 
         protected void handleRefuse(ACLMessage refuse) {
+            requests_done++;
+            if (venue_proposal.size() == requests_done) {
+                /* compute the best bands to hire */
+                requests_done = 0;
+            }
 
         }
 
@@ -370,7 +380,7 @@ public class Venue extends Agent {
         }
 
         protected void handleFailure(ACLMessage failure) {
-
+            // nothing to see here
         }
 
     }

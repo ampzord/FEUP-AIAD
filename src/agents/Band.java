@@ -129,17 +129,27 @@ public class Band extends Agent {
 
         protected ACLMessage handleRequest(ACLMessage request) throws RefuseException {
             //System.out.println(getLocalName() + " received " + request.getContent() + " from " + request.getSender().getLocalName());
-
-            String[] tokens = request.getContent().split("::");
-            int attendance = Integer.parseInt(tokens[0]);
-            int min_genre_spectrum = Integer.parseInt(tokens[1]);
-            int max_genre_spectrum = Integer.parseInt(tokens[2]);
-
             ACLMessage reply = request.createReply();
-            if (evaluateAcceptance(attendance, min_genre_spectrum, max_genre_spectrum) && current_shows < Utils.MAX_SHOWS_PER_BAND) {
-                reply.setPerformative(ACLMessage.AGREE);
-            } else
-                throw new RefuseException("Refused Request");
+
+            switch (request.getOntology()) {
+                case "Give_BusinessCard":
+                    //System.out.println("I'll give you my business card!");
+
+                    String[] tokens = request.getContent().split("::");
+                    int attendance = Integer.parseInt(tokens[0]);
+                    int min_genre_spectrum = Integer.parseInt(tokens[1]);
+                    int max_genre_spectrum = Integer.parseInt(tokens[2]);
+
+                    if (evaluateAcceptance(attendance, min_genre_spectrum, max_genre_spectrum) && current_shows < Utils.MAX_SHOWS_PER_BAND) {
+                        reply.setPerformative(ACLMessage.AGREE);
+                    } else
+                        throw new RefuseException("Refused Request");
+                    break;
+
+                case "Hiring":
+                    System.out.println("THEN GIB THE MONEIS!!!!");
+                    break;
+            }
 
             return reply;
         }
@@ -152,10 +162,18 @@ public class Band extends Agent {
 
         protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) {
             ACLMessage result = request.createReply();
-            String content = getLocalName() + "::" + prestige + "::" + min_price;
-            result.setContent(content);
-            result.setPerformative(ACLMessage.INFORM);
-            business_cards_handed++;
+
+            switch (request.getOntology()) {
+                case "Give_BusinessCard":
+                    String content = getLocalName() + "::" + prestige + "::" + min_price;
+                    result.setContent(content);
+                    result.setPerformative(ACLMessage.INFORM);
+                    business_cards_handed++;
+                    break;
+
+                case "Hiring" :
+                    break;
+            }
 
             return result;
         }
@@ -163,7 +181,7 @@ public class Band extends Agent {
     }
 
     /**
-     *  Venue negotiation
+     *  Venue negotiation ContractNetResponder
      */
     class ReceiveVenueRequest extends ContractNetResponder {
 
