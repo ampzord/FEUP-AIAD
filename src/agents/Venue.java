@@ -321,8 +321,25 @@ public class Venue extends Agent {
 
     private void getMostBandsBehaviour() {
 
+        rrayList<ACLMessage> ordered_possible_bands = possible_bands;
+        bubbleSort(ordered_possible_bands);
+        Collections.reverse(ordered_possible_bands);
 
+        int i = 0;
+        int remainder_budget = budget;
 
+        while(remainder_budget > 0 && i < ordered_possible_bands.size()){
+
+            ACLMessage tmp = ordered_possible_bands.get(i);
+            Object[] tmpContent = tmp.getContent();
+
+            if(remainder_budget => tmpContent[3] && tmpContent[2] => min_acceptable_prestige){
+    
+                venue_proposal.add(ordered_possible_bands.get(i));
+                remainder_budget -= tmpContent[3];
+                i++;
+            }    
+        }
     }
 
     private void getMostPrestigeBehaviour() {
