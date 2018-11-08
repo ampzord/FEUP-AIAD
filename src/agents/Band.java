@@ -1,4 +1,5 @@
 package agents;
+import jade.core.AID;
 import jade.core.Agent;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -7,9 +8,11 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import jade.proto.AchieveREInitiator;
 import jade.proto.AchieveREResponder;
 import utils.Utils;
 import java.util.ArrayList;
+import java.util.Vector;
 
 import javafx.util.Pair;
 
@@ -189,10 +192,12 @@ public class Band extends Agent {
                     result.setOntology("Hiring");
 
                     if (business_cards_handed == all_proposals.size()) {
-                        // TODO: responder 'as venues
-                        System.out.println(getLocalName() + " RESPONDER A TODAS AS VENUES");
-                        /* escolher os melhores shows e mandar "request" para as venues a aceitar as propostas*/
-                        // addBehaviour(new Send());
+                        // TODO: escolher os melhores shows e mandar "request" para as venues a aceitar as propostas
+
+                        // System.out.println(getLocalName() + " RESPONDER A TODAS AS VENUES");
+                        decideWhereToPlay();
+
+                        addBehaviour(new ConfirmShow(this.myAgent, null));
                     }
 
                     break;
@@ -201,5 +206,62 @@ public class Band extends Agent {
             return result;
         }
 
+        private void decideWhereToPlay() {
+            Pair<String, Integer> temp;
+            for (int i = 0; i < all_proposals.size() - 1; i++) {
+                for (int j = 1; j < all_proposals.size() - i; j++) {
+                    if (all_proposals.get(j-1).getValue() < all_proposals.get(j).getValue()) {
+                        temp = all_proposals.get(j-1);
+                        all_proposals.set(j-1, all_proposals.get(j));
+                        all_proposals.set(j, temp);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     *  Confirm Shows to Venue
+     */
+    class ConfirmShow extends AchieveREInitiator {
+
+        public ConfirmShow(Agent a, ACLMessage msg) {
+            super(a, msg);
+        }
+
+
+        protected Vector<ACLMessage> prepareRequests(ACLMessage msg) {
+            Vector<ACLMessage> v = new Vector<>();
+
+            for (int i = 0; i < all_proposals.size(); i++) {
+                if (current_shows < Utils.MAX_SHOWS_PER_BAND && all_proposals.get(i).getValue()>min_price) {
+                    ACLMessage m = new ACLMessage(ACLMessage.REQUEST);
+                    m.setOntology("Requesting_Show");
+                    m.addReceiver(new AID(all_proposals.get(i).getKey(), false));
+                    System.out.println(getLocalName() + " Requesting_Show to " + all_proposals.get(i).getKey() + " for " + all_proposals.get(i).getValue() + "$");
+                    String content = getLocalName() + "::" + all_proposals.get(i).getValue();
+                    m.setContent(content);
+                    v.add(m);
+                }
+            }
+
+            return v;
+        }
+
+        protected void handleAgree(ACLMessage agree) {
+
+        }
+
+        protected void handleRefuse(ACLMessage refuse) {
+
+        }
+
+        protected void handleInform(ACLMessage inform) {
+
+        }
+
+        protected void handleFailure(ACLMessage failure) {
+
+        }
     }
 }

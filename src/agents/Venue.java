@@ -1,19 +1,19 @@
 package agents;
 import java.util.ArrayList;
 import java.util.Vector;
-
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.domain.FIPAAgentManagement.RefuseException;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 import jade.proto.AchieveREInitiator;
+import jade.proto.AchieveREResponder;
 import javafx.util.Pair;
-
-import java.util.Random;
 
 public class Venue extends Agent {
 
@@ -122,6 +122,7 @@ public class Venue extends Agent {
         //get interested bands
         addBehaviour(new BandGetter(this, new ACLMessage(ACLMessage.REQUEST)));
 
+        addBehaviour(new ShowConfirmations(this, MessageTemplate.MatchPerformative(ACLMessage.REQUEST)));
         /*
         //hire bands
         addBehaviour(new BandContractInitiator(this, new ACLMessage(ACLMessage.CFP)));
@@ -455,7 +456,6 @@ public class Venue extends Agent {
                 //System.out.println(getLocalName() + " hiring " + venue_proposal.get(i).getSender().getLocalName() + " for " + venue_proposal.get(i).getContent());
                 m.setOntology("Hiring");
                 m.setContent(venue_proposal.get(i).getContent());
-                //TODO: testar se ao fazer setContent ele nao muda as mensagens todas...
                 v.add(m);
             }
 
@@ -487,6 +487,30 @@ public class Venue extends Agent {
 
         protected void handleFailure(ACLMessage failure) {
             // nothing to see here
+        }
+
+    }
+
+    /**
+     *  Show request responder
+     */
+    class ShowConfirmations extends AchieveREResponder {
+
+        public ShowConfirmations(Agent a, MessageTemplate mt) {
+            super(a, mt);
+        }
+
+        protected ACLMessage handleRequest(ACLMessage request) throws RefuseException {
+
+            //System.out.println(getLocalName() + " received " + request.getContent() + " from " + request.getSender().getLocalName());
+            ACLMessage reply = request.createReply();
+
+            switch (request.getOntology()) {
+                case "Give_BusinessCard":
+                    break;
+            }
+
+            return reply;
         }
 
     }
