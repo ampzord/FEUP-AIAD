@@ -1,3 +1,6 @@
 Template : name; genre(0-99); prestige(1-5); min_price(>0); min_attendance(>0)
-Iron Maiden;90;5;2000;2
+Iron Maiden1;90;5;2000;2
+Iron Maiden2;90;5;1000;2
+Iron Maiden3;90;4;3000;2
+Iron Maiden4;90;4;5000;2
 Metallica;30;3;1000;1
