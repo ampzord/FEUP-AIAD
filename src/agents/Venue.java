@@ -14,14 +14,12 @@ import jade.lang.acl.ACLMessage;
 import jade.proto.AchieveREInitiator;
 import javafx.util.Pair;
 
-import java.util.Random;
-
 public class Venue extends Agent {
 
     public enum VenueBehaviour {
         MOSTBANDS, MOSTPRESTIGE, MOSTPROFIT;
     }
-   
+
     private int attendance;
     private int budget;
     private int min_genre_spectrum;
@@ -200,7 +198,7 @@ public class Venue extends Agent {
             fe.printStackTrace();
         }
     }
-   
+
     public void takeDown() {
         unregisterFromDFService();
 
@@ -323,25 +321,41 @@ public class Venue extends Agent {
     private void getMostBandsBehaviour() {
 
         ArrayList<ACLMessage> ordered_possible_bands = possible_bands;
-        bubbleSort(ordered_possible_bands);
+        sortByPrice(ordered_possible_bands);
+
+        for (ACLMessage message : ordered_possible_bands) {
+            System.out.println(message.getContent());
+        }
+
+        System.out.println("After");
+
         Collections.reverse(ordered_possible_bands);
 
+        for (ACLMessage message : ordered_possible_bands) {
+            System.out.println(message.getContent());
+        }
+        /*
         int i = 0;
         int remainder_budget = budget;
 
-        while(remainder_budget > 0 && i < ordered_possible_bands.size()){
+        while (remainder_budget > 0 && i < ordered_possible_bands.size()) {
 
-            ACLMessage tmp = ordered_possible_bands.get(i);
-            String tmpContent[] = tmp.getContent().split("::");
+            System.out.println("oii" + i);
 
+            String[] tmp = ordered_possible_bands.get(i).getContent().split("::");
+            int prestige = Integer.parseInt(tmp[1]);
+            int min_price = Integer.parseInt(tmp[2]);
 
-            if(remainder_budget >= Integer.parseInt(tmpContent[3]) && Integer.parseInt(tmpContent[2]) >= min_acceptable_prestige){
-    
+            System.out.println("test3: " + ordered_possible_bands.get(0).getContent());
+
+            if (remainder_budget >= min_price && prestige >= min_acceptable_prestige) {
+
                 venue_proposal.add(ordered_possible_bands.get(i));
-                remainder_budget -= Integer.parseInt(tmpContent[3]);
+                remainder_budget -= min_price;
                 i++;
-            }    
+            }
         }
+        */
     }
 
     private void getMostPrestigeBehaviour() {
@@ -349,7 +363,7 @@ public class Venue extends Agent {
         ArrayList<ACLMessage> possible_bands_ordered_by_prestige = new ArrayList<>();
         possible_bands_ordered_by_prestige = possible_bands;
 
-        bubbleSort(possible_bands_ordered_by_prestige);
+        sortByTopRating(possible_bands_ordered_by_prestige);
 
         for (ACLMessage array : possible_bands_ordered_by_prestige) {
             System.out.println(array.getContent());
@@ -357,6 +371,66 @@ public class Venue extends Agent {
 
 
         calculateBestBandsInMostPrestigeBehaviour(possible_bands_ordered_by_prestige);
+    }
+
+    private void sortByTopRating(ArrayList<ACLMessage> array)
+    {
+        int n = array.size();
+        for (int i = 0; i < n-1; i++)
+            for (int j = 0; j < n-i-1; j++) {
+                String[] content1 = array.get(j).getContent().split("::");
+                String[] content2 = array.get(j+1).getContent().split("::");
+
+                int rating1 = Integer.parseInt(content1[1]);
+                int rating2 = Integer.parseInt(content2[1]);
+                int min_preco1 = Integer.parseInt(content1[2]);
+                int min_preco2 = Integer.parseInt(content2[2]);
+
+                if (rating1 < rating2)
+                {
+                    ACLMessage temp = array.get(j);
+                    array.set(j, array.get(j+1));
+                    array.set(j+1, temp);
+                }
+                else if (rating1 == rating2) {
+                    if (min_preco1 > min_preco2)
+                    {
+                        ACLMessage temp = array.get(j);
+                        array.set(j, array.get(j+1));
+                        array.set(j+1, temp);
+                    }
+                }
+            }
+    }
+
+    private void sortByPrice(ArrayList<ACLMessage> array)
+    {
+        int n = array.size();
+        for (int i = 0; i < n-1; i++)
+            for (int j = 0; j < n-i-1; j++) {
+                String[] content1 = array.get(j).getContent().split("::");
+                String[] content2 = array.get(j+1).getContent().split("::");
+                int rating1 = Integer.parseInt(content1[1]);
+                int rating2 = Integer.parseInt(content2[1]);
+                int min_preco1 = Integer.parseInt(content1[2]);
+                int min_preco2 = Integer.parseInt(content2[2]);
+
+
+                if (min_preco1 < min_preco2)
+                {
+                    ACLMessage temp = array.get(j);
+                    array.set(j, array.get(j+1));
+                    array.set(j+1, temp);
+                }
+                else if (min_preco1 == min_preco2) {
+                    if (rating1 < rating2)
+                    {
+                        ACLMessage temp = array.get(j);
+                        array.set(j, array.get(j+1));
+                        array.set(j+1, temp);
+                    }
+                }
+            }
     }
 
     private void calculateBestBandsInMostPrestigeBehaviour(ArrayList<ACLMessage> array) {
@@ -417,35 +491,6 @@ public class Venue extends Agent {
     }
 
 
-    private void bubbleSort(ArrayList<ACLMessage> array)
-    {
-        int n = array.size();
-        for (int i = 0; i < n-1; i++)
-            for (int j = 0; j < n-i-1; j++) {
-                String[] content1 = array.get(j).getContent().split("::");
-                String[] content2 = array.get(j+1).getContent().split("::");
-
-                int rating1 = Integer.parseInt(content1[1]);
-                int rating2 = Integer.parseInt(content2[1]);
-                int min_preco1 = Integer.parseInt(content1[2]);
-                int min_preco2 = Integer.parseInt(content2[2]);
-
-                if (rating1 < rating2)
-                {
-                    ACLMessage temp = array.get(j);
-                    array.set(j, array.get(j+1));
-                    array.set(j+1, temp);
-                }
-                else if (rating1 == rating2) {
-                    if (min_preco1 > min_preco2)
-                    {
-                        ACLMessage temp = array.get(j);
-                        array.set(j, array.get(j+1));
-                        array.set(j+1, temp);
-                    }
-                }
-        }
-    }
 
     /**
      *  Request Contract to a Band
@@ -519,5 +564,5 @@ public class Venue extends Agent {
         }
 
     }
-       
+
 }
