@@ -2,7 +2,6 @@ package agents;
 import java.util.ArrayList;
 import java.util.Vector;
 
-import com.sun.xml.internal.bind.v2.TODO;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
@@ -25,7 +24,7 @@ public class Venue extends Agent {
     private int max_acceptable_prestige;
     private DFAgentDescription[] available_bands;
     private ArrayList<ACLMessage> possible_bands;
-    private ArrayList<String> venue_proposal;
+    private ArrayList<ACLMessage> venue_proposal;
     private ArrayList<Pair<String,Integer>> shows;
     private int location;
     private int requests_done;
@@ -85,10 +84,10 @@ public class Venue extends Agent {
     public void setPossible_bands(ArrayList<ACLMessage> possible_bands) {
         this.possible_bands = possible_bands;
     }
-    public ArrayList<String> getVenue_proposal() {
+    public ArrayList<ACLMessage> getVenue_proposal() {
         return venue_proposal;
     }
-    public void setVenue_proposal(ArrayList<String> venue_proposal) {
+    public void setVenue_proposal(ArrayList<ACLMessage> venue_proposal) {
         this.venue_proposal = venue_proposal;
     }
     public ArrayList<Pair<String, Integer>> getShows() {
@@ -221,7 +220,7 @@ public class Venue extends Agent {
 
             if (available_bands.length == requests_done) {
                 /* compute the best bands to hire */
-                addBehaviour(new HireBands(getAgent()));
+                addBehaviour(new HireBands((Venue) this.getAgent()));
             }
         }
 
@@ -231,7 +230,7 @@ public class Venue extends Agent {
 
             if (available_bands.length == requests_done) {
                 /* compute the best bands to hire */
-                addBehaviour(new HireBands(getAgent()));
+                addBehaviour(new HireBands((Venue) this.getAgent()));
             }
         }
 
@@ -252,10 +251,10 @@ public class Venue extends Agent {
      * */
     class HireBands extends Behaviour {
 
-        Agent agent;
+        Venue venue;
 
-        public HireBands(Agent a) {
-            agent = a;
+        public HireBands(Venue v) {
+            venue = v;
         }
 
         @Override
@@ -265,7 +264,53 @@ public class Venue extends Agent {
 
         @Override
         public boolean done() {
-            return false;
+            addBehaviour(new RequestContract(venue, new ACLMessage(ACLMessage.REQUEST)));
+
+            return true;
+        }
+
+    }
+
+    /**
+     *  Request Contract to a Band
+     */
+    class RequestContract extends AchieveREInitiator {
+
+        public RequestContract(Agent a, ACLMessage msg) {
+            super(a, msg);
+        }
+
+        protected Vector<ACLMessage> prepareRequests(ACLMessage msg) {
+            Vector<ACLMessage> v = new Vector<>();
+
+            System.out.println();
+            for(int i=0; i<available_bands.length; i++) {
+                msg.addReceiver(new AID(available_bands[i].getName().getLocalName(), false));
+                //System.out.println(getLocalName() + " - Sending Request to " + available_bands[i].getName().getLocalName());
+            }
+
+            String content = attendance + "::" + min_genre_spectrum + "::" + max_genre_spectrum;
+            msg.setContent(content);
+
+            v.add(msg);
+
+            return v;
+        }
+
+        protected void handleAgree(ACLMessage agree) {
+
+        }
+
+        protected void handleRefuse(ACLMessage refuse) {
+
+        }
+
+        protected void handleInform(ACLMessage inform) {
+
+        }
+
+        protected void handleFailure(ACLMessage failure) {
+
         }
 
     }
@@ -315,7 +360,7 @@ public class Venue extends Agent {
             // fazer aqui algoritmo para escolher melhores shows
             // placeholder price
             String string = "Iron Maiden::5000";
-            venue_proposal.add(string);
+            //venue_proposal.add(string);
             String[] tokens = string.split("::");
             String bandName = tokens[0];
             int price = Integer.parseInt(tokens[1]);
@@ -326,7 +371,7 @@ public class Venue extends Agent {
                 if (rsp.getSender().getLocalName().equals(bandName)) {
                     ACLMessage msg = ((ACLMessage) responses.get(i)).createReply();
                     msg.setPerformative(ACLMessage.ACCEPT_PROPOSAL); // OR NOT!
-                    msg.setContent(venue_proposal.get(0));
+                    //msg.setContent(venue_proposal.get(0));
                     acceptances.add(msg);
                 } else {
                     ACLMessage msg = ((ACLMessage) responses.get(i)).createReply();
