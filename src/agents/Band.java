@@ -148,7 +148,7 @@ public class Band extends Agent {
                     break;
 
                 case "Hiring":
-                    System.out.println("THEN GIB THE MONEIS!!!!");
+                    //System.out.println(getLocalName() + " says THEN GIB THE MONEIS!!!!");
 
                     int proposed_payment = Integer.parseInt(request.getContent());
                     all_proposals.add(new Pair<>(request.getSender().getLocalName(),proposed_payment));

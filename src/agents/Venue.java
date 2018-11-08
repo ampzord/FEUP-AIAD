@@ -229,7 +229,7 @@ public class Venue extends Agent {
             System.out.println();
             for(int i=0; i<available_bands.length; i++) {
                 msg.addReceiver(new AID(available_bands[i].getName().getLocalName(), false));
-                //System.out.println(getLocalName() + " - Sending Request to " + available_bands[i].getName().getLocalName());
+                System.out.println(getLocalName() + " - Sending Request to " + available_bands[i].getName().getLocalName());
             }
 
             msg.setOntology("Give_BusinessCard");
@@ -243,16 +243,6 @@ public class Venue extends Agent {
 
         protected void handleAgree(ACLMessage agree) {
 
-            if (agree.getOntology().equals("Give_BusinessCard")) {
-                //System.out.println(getLocalName() + " received agree from " + agree.getSender().getLocalName());
-                requests_done++;
-
-                if (available_bands.length == requests_done) {
-                    /* compute the best bands to hire */
-                    addBehaviour(new HireBands((Venue)getAgent()));
-                    requests_done = 0;
-                }
-            }
         }
 
         protected void handleRefuse(ACLMessage refuse) {
@@ -268,8 +258,15 @@ public class Venue extends Agent {
 
         protected void handleInform(ACLMessage inform) {
             if (inform.getOntology().equals("Give_BusinessCard")) {
-                System.out.println(getLocalName() + " received INFORM " + inform.getContent() + " from " + inform.getSender().getLocalName());
+                System.out.println(getLocalName() + " received \"Give_BusinessCard\" INFORM " + inform.getContent() + " from " + inform.getSender().getLocalName());
                 possible_bands.add(inform);
+                requests_done++;
+
+                if (available_bands.length == requests_done) {
+                    /* compute the best bands to hire */
+                    addBehaviour(new HireBands((Venue)getAgent()));
+                    requests_done = 0;
+                }
             }
         }
 
@@ -286,8 +283,10 @@ public class Venue extends Agent {
     class HireBands extends Behaviour {
 
         Venue venue;
+        boolean flag;
 
         public HireBands(Venue v) {
+            flag = false;
         }
 
         @Override
@@ -308,13 +307,20 @@ public class Venue extends Agent {
                 default:
                     break;
             }
+
+            flag = true;
         }
 
         @Override
         public boolean done() {
-            addBehaviour(new RequestContract(venue, new ACLMessage(ACLMessage.REQUEST)));
+            return flag;
+        }
 
-            return true;
+        @Override
+        public int onEnd() {
+            addBehaviour(new RequestContract(venue, null));
+
+            return 0;
         }
 
     }
@@ -398,8 +404,7 @@ public class Venue extends Agent {
     }
 
 
-    private void bubbleSort(ArrayList<ACLMessage> array)
-    {
+    private void bubbleSort(ArrayList<ACLMessage> array) {
         int n = array.size();
         for (int i = 0; i < n-1; i++)
             for (int j = 0; j < n-i-1; j++) {
@@ -445,19 +450,34 @@ public class Venue extends Agent {
 
             System.out.println();
             for(int i=0; i<venue_proposal.size(); i++) {
-                msg.addReceiver(new AID(venue_proposal.get(i).getSender().getLocalName(), false));
+                ACLMessage m = new ACLMessage(ACLMessage.REQUEST);
+                m.addReceiver(new AID(venue_proposal.get(i).getSender().getLocalName(), false));
                 //System.out.println(getLocalName() + " hiring " + venue_proposal.get(i).getSender().getLocalName() + " for " + venue_proposal.get(i).getContent());
-                msg.setOntology("Hiring");
-                msg.setContent(venue_proposal.get(i).getContent());
+                m.setOntology("Hiring");
+                m.setContent(venue_proposal.get(i).getContent());
                 //TODO: testar se ao fazer setContent ele nao muda as mensagens todas...
-                v.add(msg);
+                v.add(m);
             }
 
             return v;
         }
 
         protected void handleAgree(ACLMessage agree) {
-            if (agree.getOntology().equals("Hiring")) {
+        }
+
+        protected void handleRefuse(ACLMessage refuse) {
+            if (refuse.getOntology().equals("Hiring")) {
+                requests_done++;
+                if (venue_proposal.size() == requests_done) {
+                    /* DESPERATION BEHAVIOUR */
+                    //addBehaviour(new BandGetter((Venue)getAgent(), new ACLMessage(ACLMessage.REQUEST)));
+                    requests_done = 0;
+                }
+            }
+        }
+
+        protected void handleInform(ACLMessage inform) {
+            if (inform.getOntology().equals("Hiring")) {
                 requests_done++;
 
                 if (venue_proposal.size() == requests_done) {
@@ -474,23 +494,7 @@ public class Venue extends Agent {
                     requests_done = 0;
                 }
 
-            }
-        }
-
-        protected void handleRefuse(ACLMessage refuse) {
-            if (refuse.getOntology().equals("Hiring")) {
-                requests_done++;
-                if (venue_proposal.size() == requests_done) {
-                    /* DESPERATION BEHAVIOUR */
-                    //addBehaviour(new BandGetter((Venue)getAgent(), new ACLMessage(ACLMessage.REQUEST)));
-                    requests_done = 0;
-                }
-            }
-        }
-
-        protected void handleInform(ACLMessage inform) {
-            if (inform.getOntology().equals("Hiring")) {
-                System.out.println(getLocalName() + " received INFORM " + inform.getContent() + " from " + inform.getSender().getLocalName());
+                //System.out.println(getLocalName() + " received INFORM " + inform.getContent() + " from " + inform.getSender().getLocalName());
                 possible_bands.add(inform);
             }
         }
