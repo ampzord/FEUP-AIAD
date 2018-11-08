@@ -220,8 +220,6 @@ public class Venue extends Agent {
             requests_done++;
 
             if (available_bands.length == requests_done) {
-                System.out.println(getLocalName() + " - ta tudo meus bois " + requests_done);
-
                 /* compute the best bands to hire */
                 addBehaviour(new HireBands(getAgent()));
             }
@@ -232,7 +230,8 @@ public class Venue extends Agent {
             requests_done++;
 
             if (available_bands.length == requests_done) {
-                System.out.println(getLocalName() + " - ta tudo meus bois" + requests_done);
+                /* compute the best bands to hire */
+                addBehaviour(new HireBands(getAgent()));
             }
         }
 
