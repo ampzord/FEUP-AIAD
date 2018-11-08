@@ -293,7 +293,6 @@ public class Venue extends Agent {
 
         @Override
         public void action() {
-            //TODO: algoritmo para escolher as melhores bandas a contratar (e perceber como caralho funciona um behaviour)
 
             switch(behaviour){
                 case MOSTBANDS:
@@ -563,7 +562,9 @@ public class Venue extends Agent {
             ACLMessage reply = request.createReply();
 
             switch (request.getOntology()) {
-                case "Give_BusinessCard":
+                case "Requesting_Show":
+                    //TODO: decidir o preco
+
                     break;
             }
 
