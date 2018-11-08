@@ -327,41 +327,36 @@ public class Venue extends Agent {
     private void getMostBandsBehaviour() {
 
         ArrayList<ACLMessage> ordered_possible_bands = possible_bands;
-        sortByPrice(ordered_possible_bands);
-
-        for (ACLMessage message : ordered_possible_bands) {
-            System.out.println(message.getContent());
-        }
-
-        System.out.println("After");
+        sortBandsByPrice(ordered_possible_bands);
 
         Collections.reverse(ordered_possible_bands);
 
-        for (ACLMessage message : ordered_possible_bands) {
+        calculateBestBandsInMostBandsBehaviour(ordered_possible_bands);
+
+        for(ACLMessage message : venue_proposal) {
             System.out.println(message.getContent());
         }
-        /*
-        int i = 0;
-        int remainder_budget = budget;
 
-        while (remainder_budget > 0 && i < ordered_possible_bands.size()) {
+    }
 
-            System.out.println("oii" + i);
+    private void calculateBestBandsInMostBandsBehaviour(ArrayList<ACLMessage> possible_bands) {
+        int remainder_budget = this.budget;
 
-            String[] tmp = ordered_possible_bands.get(i).getContent().split("::");
-            int prestige = Integer.parseInt(tmp[1]);
-            int min_price = Integer.parseInt(tmp[2]);
+        for (int i = 0; i < possible_bands.size(); i++) {
+            String[] content = possible_bands.get(i).getContent().split("::");
+            int min_price = Integer.parseInt(content[2]);
+            ACLMessage message = possible_bands.get(i);
 
-            System.out.println("test3: " + ordered_possible_bands.get(0).getContent());
-
-            if (remainder_budget >= min_price && prestige >= min_acceptable_prestige) {
-
-                venue_proposal.add(ordered_possible_bands.get(i));
+            if (remainder_budget > min_price) {
                 remainder_budget -= min_price;
-                i++;
+                possible_bands.get(i).setContent(Integer.toString(min_price));
             }
+            else {
+                possible_bands.get(i).setContent("0");
+            }
+            venue_proposal.add(possible_bands.get(i));
         }
-        */
+
     }
 
     private void getMostPrestigeBehaviour() {
@@ -369,17 +364,12 @@ public class Venue extends Agent {
         ArrayList<ACLMessage> possible_bands_ordered_by_prestige = new ArrayList<>();
         possible_bands_ordered_by_prestige = possible_bands;
 
-        sortByTopRating(possible_bands_ordered_by_prestige);
-
-        for (ACLMessage array : possible_bands_ordered_by_prestige) {
-            System.out.println(array.getContent());
-        }
-
+        sortBandsByBestRating(possible_bands_ordered_by_prestige);
 
         calculateBestBandsInMostPrestigeBehaviour(possible_bands_ordered_by_prestige);
     }
 
-    private void sortByTopRating(ArrayList<ACLMessage> array)
+    private void sortBandsByBestRating(ArrayList<ACLMessage> array)
     {
         int n = array.size();
         for (int i = 0; i < n-1; i++)
@@ -409,7 +399,7 @@ public class Venue extends Agent {
             }
     }
 
-    private void sortByPrice(ArrayList<ACLMessage> array)
+    private void sortBandsByPrice(ArrayList<ACLMessage> array)
     {
         int n = array.size();
         for (int i = 0; i < n-1; i++)
