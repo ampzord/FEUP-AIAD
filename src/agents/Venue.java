@@ -1,6 +1,8 @@
 package agents;
 import java.util.ArrayList;
 import java.util.Vector;
+
+import com.sun.xml.internal.bind.v2.TODO;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
@@ -109,10 +111,6 @@ public class Venue extends Agent {
         registerToDFService();
 
         searchBands();
-
-        //TODO: perguntar 'as bandas as cenas
-        //TODO: calcular quais bandas queremos
-        //TODO: contratar bandas
 
         //get interested bands
         addBehaviour(new BandGetter(this, new ACLMessage(ACLMessage.REQUEST)));
@@ -223,7 +221,9 @@ public class Venue extends Agent {
 
             if (available_bands.length == requests_done) {
                 System.out.println(getLocalName() + " - ta tudo meus bois " + requests_done);
-                //TODO: comecar aqui
+
+                /* compute the best bands to hire */
+                addBehaviour(new HireBands(getAgent()));
             }
         }
 
@@ -249,7 +249,31 @@ public class Venue extends Agent {
 
 
     /*
-    *   Band Hirer
+     *   Band Hirer
+     * */
+    class HireBands extends Behaviour {
+
+        Agent agent;
+
+        public HireBands(Agent a) {
+            agent = a;
+        }
+
+        @Override
+        public void action() {
+            //TODO: algoritmo para escolher as melhores bandas a contratar (e perceber como caralho funciona um behaviour)
+        }
+
+        @Override
+        public boolean done() {
+            return false;
+        }
+
+    }
+
+
+    /*
+    *   Contract Net
     * */
     class BandContractInitiator extends ContractNetInitiator {
 
@@ -289,7 +313,7 @@ public class Venue extends Agent {
                 }
             }
 
-            // TODO: algoritmo para escolher melhores shows
+            // fazer aqui algoritmo para escolher melhores shows
             // placeholder price
             String string = "Iron Maiden::5000";
             venue_proposal.add(string);
