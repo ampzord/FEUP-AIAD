@@ -22,8 +22,8 @@ public class Band extends Agent {
     private int min_price;
     private int min_attendance;
     private int current_shows;
-    private ArrayList<Pair<String, Integer>> all_proposals;
-    private int business_cards_handed;
+    private ArrayList<Pair<String, Integer>> all_proposals;    private int business_cards_handed;
+
 
     @Override
     public String toString() {

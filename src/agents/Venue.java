@@ -13,8 +13,15 @@ import jade.lang.acl.ACLMessage;
 import jade.proto.AchieveREInitiator;
 import jade.proto.ContractNetInitiator;
 import javafx.util.Pair;
+import utils.Utils;
+
+import java.util.Random;
 
 public class Venue extends Agent {
+
+    public enum VenueBehaviours {
+        MOSTBANDS, MOSTPRESTIGE, MOSTPROFIT;
+    }
    
     private int attendance;
     private int budget;
@@ -28,12 +35,15 @@ public class Venue extends Agent {
     private ArrayList<Pair<String,Integer>> shows;
     private int location;
     private int requests_done;
+    private VenueBehaviours behaviour;
+
+
 
     @Override
     public String toString() {
         return String.format("Venue - %1$-15s", this.getAID().getLocalName())
-                + String.format(" Attendance=%s, Budget=%s, Min Genre Spectrum=%s, Max Genre Spectrum=%s, Min Accept Prestige=%s, Max Accept Prestige=%s, Location=%s",
-                this.attendance, this.budget, this.min_genre_spectrum, this.max_genre_spectrum, this.min_acceptable_prestige, this.max_acceptable_prestige, this.location);
+                + String.format(" Attendance=%s, Budget=%s, Min Genre Spectrum=%s, Max Genre Spectrum=%s, Min Accept Prestige=%s, Max Accept Prestige=%s, Location=%s, Behaviour=%s",
+                this.attendance, this.budget, this.min_genre_spectrum, this.max_genre_spectrum, this.min_acceptable_prestige, this.max_acceptable_prestige, this.location, this.behaviour);
     }
 
     public void setAttendance(int attendance) {
@@ -128,11 +138,29 @@ public class Venue extends Agent {
         setMax_genre_spectrum((int)getArguments()[4]);
         setMin_acceptable_prestige((int)getArguments()[5]);
         setMax_acceptable_prestige((int)getArguments()[6]);
+        setLocation((int)getArguments()[7]);
+        setBehaviour((String) getArguments()[8]);
         possible_bands = new ArrayList<>();
         venue_proposal = new ArrayList<>();
         shows = new ArrayList<>();
-        setLocation((int)getArguments()[7]);
+
         requests_done = 0;
+    }
+
+    private void setBehaviour(String name) {
+        switch (name) {
+            case "MOSTBANDS":
+                behaviour = VenueBehaviours.MOSTBANDS;
+                break;
+
+            case "MOSTPROFIT":
+                behaviour = VenueBehaviours.MOSTPROFIT;
+                break;
+
+            case "MOSTPRESTIGE":
+                behaviour = VenueBehaviours.MOSTPRESTIGE;
+                break;
+        }
     }
 
     private void printVenueInformation() {
@@ -220,7 +248,7 @@ public class Venue extends Agent {
 
             if (available_bands.length == requests_done) {
                 /* compute the best bands to hire */
-                addBehaviour(new HireBands((Venue) this.getAgent()));
+                addBehaviour(new HireBands((Venue)getAgent()));
             }
         }
 
@@ -230,7 +258,7 @@ public class Venue extends Agent {
 
             if (available_bands.length == requests_done) {
                 /* compute the best bands to hire */
-                addBehaviour(new HireBands((Venue) this.getAgent()));
+                addBehaviour(new HireBands((Venue)getAgent()));
             }
         }
 
@@ -255,11 +283,43 @@ public class Venue extends Agent {
 
         public HireBands(Venue v) {
             venue = v;
+            Random rand = new Random();
+
         }
 
         @Override
         public void action() {
             //TODO: algoritmo para escolher as melhores bandas a contratar (e perceber como caralho funciona um behaviour)
+
+            switch(behaviour){
+                case MOSTBANDS:
+                    //get most bands
+                    //getMostBandsBehaviour(this);
+                    break;
+
+                case MOSTPRESTIGE:
+                    /*
+                    //get bands with most prestige
+                    while(venue.getBudget() > 0){
+
+                        int max = 0;
+                        for(int i = 0; i < venue.getPossible_bands().size(); i++){
+
+                            String tokens[] = venue.getPossible_bands().get(i).getContent().split("::");
+
+                            if(venue.getPossible_bands().get(i).getContent() > max){
+                                max = venue.getPossible_bands().get(i).getContent();
+                            }
+                        }
+                        return max;
+
+                    }
+                    */
+                    break;
+
+                default:
+                    break;
+            }
         }
 
         @Override
