@@ -480,21 +480,7 @@ public class Venue extends Agent {
             if (inform.getOntology().equals("Hiring")) {
                 requests_done++;
 
-                if (venue_proposal.size() == requests_done) {
-                    /* CREATE SHOW */
-                    System.out.println("-- Add band to shows  --");
-
-                /*
-                if (!someBandRefused)
-                    addBehaviour(new BandGetter((Venue)getAgent(), new ACLMessage(ACLMessage.REQUEST)));
-                else
-                    addBehaviour(new InformSpectators());
-                */
-
-                    requests_done = 0;
-                }
-
-                //System.out.println(getLocalName() + " received INFORM " + inform.getContent() + " from " + inform.getSender().getLocalName());
+                System.out.println(getLocalName() + " received INFORM " + inform.getContent() + " from " + inform.getSender().getLocalName());
                 possible_bands.add(inform);
             }
         }

@@ -1,2 +1,3 @@
 Template : name;attendance(>0; 1 means 1000); budget(>0); min_genre_spectrum(0-99); max_genre_spectrum(0-99); min_acceptable_prestige(1-5); max_acceptable_prestige(1-5); location(1-5); behaviour(MOSTPRESTIGE, MOSTBANDS, MOSTPROFIT)
 Casa da Musica;3;10000;75;99;3;5;2;MOSTPRESTIGE
+Arena;3;7000;75;99;3;5;2;MOSTPRESTIGE

@@ -190,6 +190,7 @@ public class Band extends Agent {
 
                     if (business_cards_handed == all_proposals.size()) {
                         // TODO: responder 'as venues
+                        System.out.println(getLocalName() + " RESPONDER A TODAS AS VENUES");
                         /* escolher os melhores shows e mandar "request" para as venues a aceitar as propostas*/
                         // addBehaviour(new Send());
                     }
