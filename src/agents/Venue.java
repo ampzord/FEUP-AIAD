@@ -1,5 +1,6 @@
 package agents;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Vector;
 
 import jade.core.AID;
@@ -321,7 +322,7 @@ public class Venue extends Agent {
 
     private void getMostBandsBehaviour() {
 
-        rrayList<ACLMessage> ordered_possible_bands = possible_bands;
+        ArrayList<ACLMessage> ordered_possible_bands = possible_bands;
         bubbleSort(ordered_possible_bands);
         Collections.reverse(ordered_possible_bands);
 
@@ -331,12 +332,13 @@ public class Venue extends Agent {
         while(remainder_budget > 0 && i < ordered_possible_bands.size()){
 
             ACLMessage tmp = ordered_possible_bands.get(i);
-            Object[] tmpContent = tmp.getContent();
+            String tmpContent[] = tmp.getContent().split("::");
 
-            if(remainder_budget => tmpContent[3] && tmpContent[2] => min_acceptable_prestige){
+
+            if(remainder_budget >= Integer.parseInt(tmpContent[3]) && Integer.parseInt(tmpContent[2]) >= min_acceptable_prestige){
     
                 venue_proposal.add(ordered_possible_bands.get(i));
-                remainder_budget -= tmpContent[3];
+                remainder_budget -= Integer.parseInt(tmpContent[3]);
                 i++;
             }    
         }
