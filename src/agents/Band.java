@@ -8,10 +8,8 @@ import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.proto.AchieveREResponder;
-import jade.proto.ContractNetResponder;
 import utils.Utils;
 import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
 
 import javafx.util.Pair;
 
@@ -22,7 +20,8 @@ public class Band extends Agent {
     private int min_price;
     private int min_attendance;
     private int current_shows;
-    private ArrayList<Pair<String, Integer>> all_proposals;    private int business_cards_handed;
+    private ArrayList<Pair<String, Integer>> all_proposals;
+    private int business_cards_handed;
 
 
     @Override
@@ -129,17 +128,39 @@ public class Band extends Agent {
 
         protected ACLMessage handleRequest(ACLMessage request) throws RefuseException {
             //System.out.println(getLocalName() + " received " + request.getContent() + " from " + request.getSender().getLocalName());
-
-            String[] tokens = request.getContent().split("::");
-            int attendance = Integer.parseInt(tokens[0]);
-            int min_genre_spectrum = Integer.parseInt(tokens[1]);
-            int max_genre_spectrum = Integer.parseInt(tokens[2]);
-
             ACLMessage reply = request.createReply();
-            if (evaluateAcceptance(attendance, min_genre_spectrum, max_genre_spectrum) && current_shows < Utils.MAX_SHOWS_PER_BAND) {
-                reply.setPerformative(ACLMessage.AGREE);
-            } else
-                throw new RefuseException("Refused Request");
+
+            switch (request.getOntology()) {
+                case "Give_BusinessCard":
+                    //System.out.println("I'll give you my business card!");
+
+                    String[] tokens = request.getContent().split("::");
+                    int attendance = Integer.parseInt(tokens[0]);
+                    int min_genre_spectrum = Integer.parseInt(tokens[1]);
+                    int max_genre_spectrum = Integer.parseInt(tokens[2]);
+
+                    if (evaluateAcceptance(attendance, min_genre_spectrum, max_genre_spectrum) && current_shows < Utils.MAX_SHOWS_PER_BAND) {
+                        reply.setPerformative(ACLMessage.AGREE);
+                        reply.setOntology("Give_BusinessCard");
+                    } else
+                        throw new RefuseException("Refused Request");
+
+                    break;
+
+                case "Hiring":
+                    System.out.println("THEN GIB THE MONEIS!!!!");
+
+                    int proposed_payment = Integer.parseInt(request.getContent());
+                    all_proposals.add(new Pair<>(request.getSender().getLocalName(),proposed_payment));
+
+                    if (current_shows < Utils.MAX_SHOWS_PER_BAND) {
+                        reply.setPerformative(ACLMessage.AGREE);
+                        reply.setOntology("Hiring");
+                    } else
+                        throw new RefuseException("Refused Request");
+
+                    break;
+            }
 
             return reply;
         }
@@ -152,97 +173,32 @@ public class Band extends Agent {
 
         protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) {
             ACLMessage result = request.createReply();
-            String content = getLocalName() + "::" + prestige + "::" + min_price;
-            result.setContent(content);
-            result.setPerformative(ACLMessage.INFORM);
-            business_cards_handed++;
 
-            return result;
-        }
+            switch (request.getOntology()) {
+                case "Give_BusinessCard":
+                    String content = getLocalName() + "::" + prestige + "::" + min_price;
+                    result.setContent(content);
+                    result.setPerformative(ACLMessage.INFORM);
+                    result.setOntology("Give_BusinessCard");
+                    business_cards_handed++;
+                    break;
 
-    }
+                case "Hiring" :
+                    result.setContent("I'll get back to you");
+                    result.setPerformative(ACLMessage.INFORM);
+                    result.setOntology("Hiring");
 
-    /**
-     *  Venue negotiation
-     */
-    class ReceiveVenueRequest extends ContractNetResponder {
+                    if (business_cards_handed == all_proposals.size()) {
+                        // TODO: responder 'as venues
+                        /* escolher os melhores shows e mandar "request" para as venues a aceitar as propostas*/
+                        // addBehaviour(new Send());
+                    }
 
-        public ReceiveVenueRequest(Agent a, MessageTemplate mt) {
-            super(a, mt);
-        }
-
-        protected ACLMessage handleCfp(ACLMessage cfp) {
-            System.out.println(getAID().getLocalName() + " received " + cfp.getContent() + " from " + cfp.getSender().getLocalName());
-
-            String[] tokens = cfp.getContent().split("::");
-            int attendance = Integer.parseInt(tokens[0]);
-            int min_genre_spectrum = Integer.parseInt(tokens[1]);
-            int max_genre_spectrum = Integer.parseInt(tokens[2]);
-
-            ACLMessage reply = cfp.createReply();
-            if (evaluateAcceptance(attendance, min_genre_spectrum, max_genre_spectrum) && current_shows < Utils.MAX_SHOWS_PER_BAND) {
-                reply.setPerformative(ACLMessage.PROPOSE);
-
-                String content = getLocalName() + "::" + prestige + "::" + min_price;
-                reply.setContent(content);
-                business_cards_handed++;
-            } else {
-                reply.setPerformative(ACLMessage.REFUSE);
-                reply.setContent("Your proposal doesn't fit our requirements");
-            }
-
-            return reply;
-        }
-
-        public boolean evaluateAcceptance(int attendance, int min_genre_spectrum, int max_genre_spectrum) {
-            if (attendance >= min_attendance && min_genre_spectrum <= genre && genre <= max_genre_spectrum)
-                return true;
-            return false;
-        }
-
-        protected void handleRejectProposal(ACLMessage cfp, ACLMessage propose, ACLMessage reject) {
-            System.out.println(myAgent.getLocalName() + " got a reject from " + reject.getSender().getLocalName());
-            business_cards_handed--;
-        }
-
-        protected ACLMessage handleAcceptProposal(ACLMessage cfp, ACLMessage propose, ACLMessage accept) {
-            System.out.println(myAgent.getLocalName() + " got an accept from " + accept.getSender().getLocalName());
-            ACLMessage result = accept.createReply();
-
-            String[] tokens = accept.getContent().split("::");
-            int price = Integer.parseInt(tokens[1]);
-
-            Pair<String, Integer> pair = new Pair<>(accept.getSender().getLocalName() , price);
-            all_proposals.add(pair);
-
-            //wait for all proposals
-            System.out.println(getAID().getLocalName() + " is waiting for " + business_cards_handed + " proposals, currently have " + all_proposals.size());
-            while (business_cards_handed != all_proposals.size()) {
-                System.out.println(getAID().getLocalName() + " is waiting for more proposals");
-                try {
-                    TimeUnit.SECONDS.sleep(3);
-                } catch (Exception e) {
-                    System.out.println("band waiter is kaput");
-                }
-            }
-
-            int max = min_price;
-            int max_pos = 0;
-            for (int i=0; i<all_proposals.size(); i++) {
-                if (all_proposals.get(i).getValue() > max) {
-                    max = all_proposals.get(i).getValue();
-                    max_pos = i;
-                }
-            }
-
-            if (accept.getSender().getLocalName().equals(all_proposals.get(max_pos).getKey())) {
-                result.setPerformative(ACLMessage.INFORM);
-                result.setContent("Gib moneys");
-            } else {
-                result.setPerformative(ACLMessage.FAILURE);
+                    break;
             }
 
             return result;
         }
+
     }
 }

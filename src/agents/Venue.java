@@ -11,7 +11,6 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.proto.AchieveREInitiator;
-import jade.proto.ContractNetInitiator;
 import javafx.util.Pair;
 
 import java.util.Random;
@@ -233,6 +232,7 @@ public class Venue extends Agent {
                 //System.out.println(getLocalName() + " - Sending Request to " + available_bands[i].getName().getLocalName());
             }
 
+            msg.setOntology("Give_BusinessCard");
             String content = attendance + "::" + min_genre_spectrum + "::" + max_genre_spectrum;
             msg.setContent(content);
 
@@ -243,6 +243,16 @@ public class Venue extends Agent {
 
         protected void handleAgree(ACLMessage agree) {
 
+            if (agree.getOntology().equals("Give_BusinessCard")) {
+                //System.out.println(getLocalName() + " received agree from " + agree.getSender().getLocalName());
+                requests_done++;
+
+                if (available_bands.length == requests_done) {
+                    /* compute the best bands to hire */
+                    addBehaviour(new HireBands((Venue)getAgent()));
+                    requests_done = 0;
+                }
+            }
         }
 
         protected void handleRefuse(ACLMessage refuse) {
@@ -252,19 +262,14 @@ public class Venue extends Agent {
             if (available_bands.length == requests_done) {
                 /* compute the best bands to hire */
                 addBehaviour(new HireBands((Venue)getAgent()));
+                requests_done = 0;
             }
         }
 
         protected void handleInform(ACLMessage inform) {
-            System.out.println(getLocalName() + " received INFORM " + inform.getContent() + " from " + inform.getSender().getLocalName());
-            possible_bands.add(inform);
-
-            //System.out.println(getLocalName() + " received agree from " + agree.getSender().getLocalName());
-            requests_done++;
-
-            if (available_bands.length == requests_done) {
-                /* compute the best bands to hire */
-                addBehaviour(new HireBands((Venue)getAgent()));
+            if (inform.getOntology().equals("Give_BusinessCard")) {
+                System.out.println(getLocalName() + " received INFORM " + inform.getContent() + " from " + inform.getSender().getLocalName());
+                possible_bands.add(inform);
             }
         }
 
@@ -428,114 +433,72 @@ public class Venue extends Agent {
      */
     class RequestContract extends AchieveREInitiator {
 
+        boolean someBandRefused;
+
         public RequestContract(Agent a, ACLMessage msg) {
             super(a, msg);
+            someBandRefused = false;
         }
 
         protected Vector<ACLMessage> prepareRequests(ACLMessage msg) {
             Vector<ACLMessage> v = new Vector<>();
 
             System.out.println();
-            for(int i=0; i<available_bands.length; i++) {
-                msg.addReceiver(new AID(available_bands[i].getName().getLocalName(), false));
-                //System.out.println(getLocalName() + " - Sending Request to " + available_bands[i].getName().getLocalName());
+            for(int i=0; i<venue_proposal.size(); i++) {
+                msg.addReceiver(new AID(venue_proposal.get(i).getSender().getLocalName(), false));
+                //System.out.println(getLocalName() + " hiring " + venue_proposal.get(i).getSender().getLocalName() + " for " + venue_proposal.get(i).getContent());
+                msg.setOntology("Hiring");
+                msg.setContent(venue_proposal.get(i).getContent());
+                //TODO: testar se ao fazer setContent ele nao muda as mensagens todas...
+                v.add(msg);
             }
-
-            String content = attendance + "::" + min_genre_spectrum + "::" + max_genre_spectrum;
-            msg.setContent(content);
-
-            v.add(msg);
 
             return v;
         }
 
         protected void handleAgree(ACLMessage agree) {
+            if (agree.getOntology().equals("Hiring")) {
+                requests_done++;
 
+                if (venue_proposal.size() == requests_done) {
+                    /* CREATE SHOW */
+                    System.out.println("-- Add band to shows  --");
+
+                /*
+                if (!someBandRefused)
+                    addBehaviour(new BandGetter((Venue)getAgent(), new ACLMessage(ACLMessage.REQUEST)));
+                else
+                    addBehaviour(new InformSpectators());
+                */
+
+                    requests_done = 0;
+                }
+
+            }
         }
 
         protected void handleRefuse(ACLMessage refuse) {
-
+            if (refuse.getOntology().equals("Hiring")) {
+                requests_done++;
+                if (venue_proposal.size() == requests_done) {
+                    /* DESPERATION BEHAVIOUR */
+                    //addBehaviour(new BandGetter((Venue)getAgent(), new ACLMessage(ACLMessage.REQUEST)));
+                    requests_done = 0;
+                }
+            }
         }
 
         protected void handleInform(ACLMessage inform) {
-
+            if (inform.getOntology().equals("Hiring")) {
+                System.out.println(getLocalName() + " received INFORM " + inform.getContent() + " from " + inform.getSender().getLocalName());
+                possible_bands.add(inform);
+            }
         }
 
         protected void handleFailure(ACLMessage failure) {
-
+            // nothing to see here
         }
 
-    }
-
-
-    /*
-    *   Contract Net
-    * */
-    class BandContractInitiator extends ContractNetInitiator {
-
-        public BandContractInitiator(Agent a, ACLMessage msg) {
-            super(a, msg);
-        }
-
-        protected Vector prepareCfps(ACLMessage cfp) {
-            Vector v = new Vector();
-            System.out.println();
-            for(int i=0; i<available_bands.length; i++) {
-                cfp.addReceiver(new AID(available_bands[i].getName().getLocalName(), false));
-                System.out.println(getLocalName() + " - Sending Call For Proposal (CFP) to " + available_bands[i].getName().getLocalName());
-            }
-
-            String content = attendance + "::" + min_genre_spectrum + "::" + max_genre_spectrum;
-            cfp.setContent(content);
-
-            v.add(cfp);
-
-            return v;
-        }
-
-        protected void handleAllResponses(Vector responses, Vector acceptances) {
-
-            System.out.println("\n" + getLocalName() + " got " + responses.size() + " responses!");
-
-            for (int i=0; i<responses.size(); i++) {
-                ACLMessage rsp = (ACLMessage) responses.get(0);
-                String string = rsp.getContent();
-                if (!string.equals("Your proposal doesn't fit our requirements")) {
-                    String[] tokens = string.split("::");
-                    int min_price = Integer.parseInt(tokens[2]);
-
-                    if (min_price <= budget)
-                        possible_bands.add(rsp);
-                }
-            }
-
-            // fazer aqui algoritmo para escolher melhores shows
-            // placeholder price
-            String string = "Iron Maiden::5000";
-            //venue_proposal.add(string);
-            String[] tokens = string.split("::");
-            String bandName = tokens[0];
-            int price = Integer.parseInt(tokens[1]);
-
-            //reply
-            for(int i=0; i<responses.size(); i++) {
-                ACLMessage rsp = (ACLMessage) responses.get(i);
-                if (rsp.getSender().getLocalName().equals(bandName)) {
-                    ACLMessage msg = ((ACLMessage) responses.get(i)).createReply();
-                    msg.setPerformative(ACLMessage.ACCEPT_PROPOSAL); // OR NOT!
-                    //msg.setContent(venue_proposal.get(0));
-                    acceptances.add(msg);
-                } else {
-                    ACLMessage msg = ((ACLMessage) responses.get(i)).createReply();
-                    msg.setPerformative(ACLMessage.REJECT_PROPOSAL); // OR NOT!
-                    acceptances.add(msg);
-                }
-            }
-        }
-
-        protected void handleAllResultNotifications(Vector resultNotifications) {
-            System.out.println("got " + resultNotifications.size() + " result notifs!");
-        }
     }
        
 }
