@@ -36,7 +36,9 @@ public class Venue extends Agent {
     private ArrayList<Pair<String,Integer>> shows;
     private int location;
     private int requests_done;
+    private int band_confirmations;
     private VenueBehaviour behaviour;
+    private boolean receivedCounterConfirmation;
 
     @Override
     public String toString() {
@@ -142,8 +144,10 @@ public class Venue extends Agent {
         possible_bands = new ArrayList<>();
         venue_proposal = new ArrayList<>();
         shows = new ArrayList<>();
+        receivedCounterConfirmation = false;
 
         requests_done = 0;
+        band_confirmations = 0;
     }
 
     private void setBehaviour(String name) {
@@ -507,14 +511,13 @@ public class Venue extends Agent {
         }
 
         protected void handleAgree(ACLMessage agree) {
+            // nothing to see here
         }
 
         protected void handleRefuse(ACLMessage refuse) {
             if (refuse.getOntology().equals("Hiring")) {
                 requests_done++;
                 if (venue_proposal.size() == requests_done) {
-                    /* DESPERATION BEHAVIOUR */
-                    //addBehaviour(new BandGetter((Venue)getAgent(), new ACLMessage(ACLMessage.REQUEST)));
                     requests_done = 0;
                 }
             }
@@ -524,8 +527,11 @@ public class Venue extends Agent {
             if (inform.getOntology().equals("Hiring")) {
                 requests_done++;
 
-                System.out.println(getLocalName() + " received INFORM " + inform.getContent() + " from " + inform.getSender().getLocalName());
+                //System.out.println(getLocalName() + " received INFORM " + inform.getContent() + " from " + inform.getSender().getLocalName());
                 possible_bands.add(inform);
+                if (venue_proposal.size() == requests_done) {
+                    requests_done = 0;
+                }
             }
         }
 
@@ -548,23 +554,58 @@ public class Venue extends Agent {
         }
 
         protected ACLMessage handleRequest(ACLMessage request) throws RefuseException {
-
-            //System.out.println(getLocalName() + " received " + request.getContent() + " from " + request.getSender().getLocalName());
+            band_confirmations++;
+            //System.out.println(getLocalName() + " received " + request.getOntology() + " from " + request.getSender().getLocalName());
             ACLMessage reply = request.createReply();
+            reply.setPerformative(ACLMessage.AGREE);
 
             switch (request.getOntology()) {
                 case "Confirming_Presence":
-                    //TODO: decidir o preco dos bilhetes
-                    //TODO: add show
-                    //TODO: ver se e' necessario desperation behaviour
-                    //TODO: reset de tudo e update do budget
+                    reply.setOntology("Confirming_Presence");
+                    reply.setContent("We will add you to our shows line-up");
 
                     break;
-                default:
+                case "Refusing_Show":
+                    reply.setOntology("Refusing_Show");
+                    reply.setContent("Thank you for considering");
+                    receivedCounterConfirmation = true;
+
                     break;
             }
 
             return reply;
+        }
+
+        protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) {
+            ACLMessage result = request.createReply();
+
+            switch (request.getOntology()) {
+                case "Confirming_Presence":
+                    result.setContent("Added to line-up");
+                    result.setPerformative(ACLMessage.INFORM);
+
+
+                    //TODO: decidir o preco dos bilhetes
+                    //TODO: add show
+                    //TODO: update budget
+
+                    break;
+
+                case "Refusing_Show" :
+                    result.setContent("Ignore this message");
+                    result.setPerformative(ACLMessage.FAILURE);
+
+                    break;
+            }
+
+            if (band_confirmations == venue_proposal.size() && receivedCounterConfirmation) {
+                System.out.println();
+                System.out.println("VENUE : " + getLocalName() + " is ready for Spectator");
+                //TODO: reset de tudo
+                //TODO: restart initial behaviour
+            }
+
+            return result;
         }
 
     }
