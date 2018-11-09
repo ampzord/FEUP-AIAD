@@ -1,6 +1,17 @@
 package agents;
+import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
+import jade.domain.DFService;
+import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.domain.FIPAAgentManagement.ServiceDescription;
+import jade.domain.FIPAException;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
+import jade.proto.ContractNetInitiator;
+import jade.proto.ContractNetResponder;
+
+import java.util.Vector;
 
 public class Spectator extends Agent {
 
@@ -8,6 +19,10 @@ public class Spectator extends Agent {
     private int min_genre_spectrum;
     private int max_genre_spectrum;
     private int location;
+
+
+
+    private DFAgentDescription[] existent_venues;
 
     @Override
     public String toString() {
@@ -42,14 +57,31 @@ public class Spectator extends Agent {
     public void setLocation(int location) {
         this.location = location;
     }
+    public DFAgentDescription[] getExistent_venues() {
+        return existent_venues;
+    }
+    public void setExistent_venues(DFAgentDescription[] existent_venues) {
+        this.existent_venues = existent_venues;
+    }
 
     public void setup() {
         setSpectatorInformation();
         printSpectatorInformation();
+        registerToDFService();
+        //addBehaviour(new WorkingBehaviour());
+    }
 
-        addBehaviour(new WorkingBehaviour());
-
-        //System.out.println(getLocalName() + ": starting to work");
+    private void searchVenuesAgent() {
+        DFAgentDescription template = new DFAgentDescription();
+        ServiceDescription sd = new ServiceDescription();
+        sd.setType("venue");
+        template.addServices(sd);
+        try {
+            DFAgentDescription[] result = DFService.search(this, template);
+            setExistent_venues(result);
+        } catch(FIPAException fe) {
+            fe.printStackTrace();
+        }
     }
 
 
@@ -64,18 +96,98 @@ public class Spectator extends Agent {
         System.out.println(this.toString());
     }
 
+    private void registerToDFService() {
+        DFAgentDescription dfd = new DFAgentDescription();
+        dfd.setName(getAID());
+        ServiceDescription sd = new ServiceDescription();
+        sd.setType("spectator");
+        sd.setName(getLocalName());
+        dfd.addServices(sd);
+        try {
+            DFService.register(this, dfd);
+        } catch(FIPAException fe) {
+            fe.printStackTrace();
+        }
+    }
 
     public void takeDown() {
         System.out.println(getLocalName() + ": done working");
     }
 
-    class WorkingBehaviour extends Behaviour {
-        public void action() {
-            //System.out.println("lul");
+/*
+    class InitiateNegotiationWithVenue extends ContractNetInitiator {
+
+        public InitiateNegotiationWithVenue(Agent a, ACLMessage msg) {
+            super(a, msg);
         }
-        public boolean done() {
-            return true;
+
+        protected Vector prepareCfps(ACLMessage cfp) {
+            Vector v = new Vector();
+            System.out.println();
+            for(int i=0; i < available_bands.length; i++) {
+                cfp.addReceiver(new AID(available_bands[i].getName().getLocalName(), false));
+                System.out.println(getLocalName() + " - Sending Call For Proposal (CFP) to " + available_spectators[i].getName().getLocalName());
+            }
+
+            String content = null;
+            for (int i = 0; i < shows.size(); i++) {
+                if (i+1 == shows.size())
+                    content += shows.get(i).getKey() + "," + shows.getValue();
+                else
+                    content += shows.get(i).getKey() + "," + shows.getValue() + "::";
+            }
+
+            cfp.setContent(content);
+            v.add(cfp);
+            return v;
         }
+
+        protected void handleAllResponses(Vector responses, Vector acceptances) {
+
+            System.out.println("\n" + getLocalName() + " got " + responses.size() + " responses!");
+
+            for (int i=0; i<responses.size(); i++) {
+                ACLMessage rsp = (ACLMessage) responses.get(0);
+                String string = rsp.getContent();
+                if (!string.equals("Your proposal doesn't fit our requirements")) {
+                    String[] tokens = string.split("::");
+                    int min_price = Integer.parseInt(tokens[2]);
+
+                    if (min_price <= budget)
+                        possible_bands.add(rsp);
+                }
+            }
+
+            // TODO: algoritmo para escolher melhores shows
+            // placeholder price
+            String string = "Iron Maiden::5000";
+            venue_proposal.add(string);
+            String[] tokens = string.split("::");
+            String bandName = tokens[0];
+            int price = Integer.parseInt(tokens[1]);
+
+            //reply
+            for(int i=0; i<responses.size(); i++) {
+                ACLMessage rsp = (ACLMessage) responses.get(i);
+                if (rsp.getSender().getLocalName().equals(bandName)) {
+                    ACLMessage msg = ((ACLMessage) responses.get(i)).createReply();
+                    msg.setPerformative(ACLMessage.ACCEPT_PROPOSAL); // OR NOT!
+                    msg.setContent(venue_proposal.get(0));
+                    acceptances.add(msg);
+                } else {
+                    ACLMessage msg = ((ACLMessage) responses.get(i)).createReply();
+                    msg.setPerformative(ACLMessage.REJECT_PROPOSAL); // OR NOT!
+                    acceptances.add(msg);
+                }
+            }
+        }
+
+        protected void handleAllResultNotifications(Vector resultNotifications) {
+            System.out.println("got " + resultNotifications.size() + " result notifs!");
+        }
+
+
     }
+*/
 
 }
