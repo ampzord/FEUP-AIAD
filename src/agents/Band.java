@@ -71,11 +71,6 @@ public class Band extends Agent {
         registerToDFService();
 
         addBehaviour(new RequestResponder(this, MessageTemplate.MatchPerformative(ACLMessage.REQUEST)));
-
-        /*
-        addBehaviour(new ReceiveVenueRequest(this, MessageTemplate.MatchPerformative(ACLMessage.CFP)));
-        //System.out.println(getLocalName() + ": starting to work");
-        */
     }
 
     private void setBandInformation() {
@@ -109,7 +104,8 @@ public class Band extends Agent {
     public void takeDown() {
         unregisterFromDFService();
 
-        System.out.println(getLocalName() + ": done working");
+        if(Utils.DEBUG)
+            System.out.println(getLocalName() + ": done working");
     }
 
     private void unregisterFromDFService() {
@@ -130,12 +126,14 @@ public class Band extends Agent {
         }
 
         protected ACLMessage handleRequest(ACLMessage request) throws RefuseException {
-            //System.out.println(getLocalName() + " received " + request.getContent() + " from " + request.getSender().getLocalName());
+            if(Utils.DEBUG)
+                System.out.println(getLocalName() + " received " + request.getContent() + " from " + request.getSender().getLocalName());
             ACLMessage reply = request.createReply();
 
             switch (request.getOntology()) {
                 case "Give_BusinessCard":
-                    //System.out.println("I'll give you my business card!");
+                    if(Utils.DEBUG)
+                        System.out.println(getLocalName() + "says: I'll give you my business card!");
 
                     String[] tokens = request.getContent().split("::");
                     int attendance = Integer.parseInt(tokens[0]);
@@ -151,7 +149,8 @@ public class Band extends Agent {
                     break;
 
                 case "Hiring":
-                    //System.out.println(getLocalName() + " says THEN GIB THE MONEIS!!!!");
+                    if(Utils.DEBUG)
+                        System.out.println(getLocalName() + " says THEN GIB THE MONEIS!!!!");
 
                     int proposed_payment = Integer.parseInt(request.getContent());
                     all_proposals.add(new Pair<>(request.getSender().getLocalName(),proposed_payment));
@@ -238,13 +237,15 @@ public class Band extends Agent {
                 if (current_shows < Utils.MAX_SHOWS_PER_BAND && all_proposals.get(i).getValue()>min_price) {
                     m.setOntology("Confirming_Presence");
                     m.addReceiver(new AID(all_proposals.get(i).getKey(), false));
-                    System.out.println(getLocalName() + " vvv Confirming_Presence vvv @ " + all_proposals.get(i).getKey() + " for " + all_proposals.get(i).getValue() + "$");
+                    if(Utils.DEBUG)
+                        System.out.println(getLocalName() + " vvv Confirming_Presence vvv @ " + all_proposals.get(i).getKey() + " for " + all_proposals.get(i).getValue() + "$");
                     String content = getLocalName() + "::" + all_proposals.get(i).getValue();
                     m.setContent(content);
                 } else {
                     m.setOntology("Refusing_Show");
                     m.addReceiver(new AID(all_proposals.get(i).getKey(), false));
-                    System.out.println(getLocalName() + " XXX Refusing_Show XXX @ " + all_proposals.get(i).getKey() + " for " + all_proposals.get(i).getValue() + "$");
+                    if(Utils.DEBUG)
+                        System.out.println(getLocalName() + " XXX Refusing_Show XXX @ " + all_proposals.get(i).getKey() + " for " + all_proposals.get(i).getValue() + "$");
                     m.setContent("");
                 }
 

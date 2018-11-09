@@ -14,6 +14,8 @@ public class Utils {
     public final static int ITENERATION_COST_PER_DISTANCE = 10;
     public final static int MAX_SHOWS_PER_BAND = 1;
 
+    private final static boolean DEBUG = false;
+
     public Utils() {
     }
 

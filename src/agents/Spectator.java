@@ -48,8 +48,6 @@ public class Spectator extends Agent {
         printSpectatorInformation();
 
         addBehaviour(new WorkingBehaviour());
-
-        //System.out.println(getLocalName() + ": starting to work");
     }
 
 
@@ -71,7 +69,6 @@ public class Spectator extends Agent {
 
     class WorkingBehaviour extends Behaviour {
         public void action() {
-            //System.out.println("lul");
         }
         public boolean done() {
             return true;
