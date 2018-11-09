@@ -8,6 +8,7 @@ public class Spectator extends Agent {
     private int min_genre_spectrum;
     private int max_genre_spectrum;
     private int location;
+    private DFAgentDescrpition[] available_spectators;
 
     @Override
     public String toString() {
@@ -42,14 +43,22 @@ public class Spectator extends Agent {
     public void setLocation(int location) {
         this.location = location;
     }
+    public DFAgentDescription[] getAvailable_venues() {
+        return setAvailable_venues;
+    }
+    public void setAvailable_venues(DFAgentDescription[] getAvailable_venues){
+        this.available_venues = available_venues;
+    }
 
     public void setup() {
         setSpectatorInformation();
         printSpectatorInformation();
 
-        addBehaviour(new WorkingBehaviour());
-    }
+        searchVenues();
 
+        //get venues of interes based on the bands they have playing
+        addBehaviour(new VenueGetter(this, new ACLMessage(ACLMessage.REQUEST)));
+    }
 
     private void setSpectatorInformation() {
         setBudget((int)getArguments()[0]);
@@ -67,7 +76,28 @@ public class Spectator extends Agent {
         System.out.println(getLocalName() + ": done working");
     }
 
-    class WorkingBehaviour extends Behaviour {
+    private void searchVenues() {
+        DFAgentDescription template = new DFAgentDescription();
+        ServiceDescription sd = new ServiceDescription();
+        sd.setType("spectator");
+        template.addServices(sd);
+        try{
+            DFAgentDescription[] result = DFService.search(this, template);
+
+            if(Utils.DEBUG) {
+                System.out.println("Spectator " + getLocalName() + " found:");
+                for(int i = 0; i < result.length; i++){
+                    System.out.println("    " + result[i].getName().getLocalName());
+                }
+            }
+
+            setAvailable_venues(result);
+        } catch(FIPAException fe){
+            fe.printStackTrace();
+            }
+    }
+
+    class VenueGetter extends Behaviour {
         public void action() {
         }
         public boolean done() {
@@ -76,3 +106,4 @@ public class Spectator extends Agent {
     }
 
 }
+
