@@ -196,7 +196,7 @@ public class Band extends Agent {
                         decideWhereToPlay();
 
                         // TODO: mandar "request" para as venues a aceitar as propostas
-                        //addBehaviour(new ConfirmShow(this.myAgent, null));
+                        addBehaviour(new ConfirmShow(this.myAgent, null));
                     }
 
                     break;
@@ -236,15 +236,16 @@ public class Band extends Agent {
                 ACLMessage m = new ACLMessage(ACLMessage.REQUEST);
 
                 if (current_shows < Utils.MAX_SHOWS_PER_BAND && all_proposals.get(i).getValue()>min_price) {
+                    current_shows++;
                     m.setOntology("Confirming_Presence");
                     m.addReceiver(new AID(all_proposals.get(i).getKey(), false));
-                    System.out.println(getLocalName() + " vvv Confirming_Presence vvv @ " + all_proposals.get(i).getKey() + " for " + all_proposals.get(i).getValue() + "$");
+                    //System.out.println(getLocalName() + " vvv Confirming_Presence vvv @ " + all_proposals.get(i).getKey() + " for " + all_proposals.get(i).getValue() + "$");
                     String content = getLocalName() + "::" + all_proposals.get(i).getValue();
                     m.setContent(content);
                 } else {
                     m.setOntology("Refusing_Show");
                     m.addReceiver(new AID(all_proposals.get(i).getKey(), false));
-                    System.out.println(getLocalName() + " XXX Refusing_Show XXX @ " + all_proposals.get(i).getKey() + " for " + all_proposals.get(i).getValue() + "$");
+                    //System.out.println(getLocalName() + " XXX Refusing_Show XXX @ " + all_proposals.get(i).getKey() + " for " + all_proposals.get(i).getValue() + "$");
                     m.setContent("");
                 }
 
