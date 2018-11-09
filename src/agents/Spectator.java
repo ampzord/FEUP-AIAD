@@ -45,7 +45,8 @@ public class Spectator extends Agent {
 
     public void setup() {
         setSpectatorInformation();
-        printSpectatorInformation();
+        if(Utils.DEBUG)
+            printSpectatorInformation();
 
         addBehaviour(new WorkingBehaviour());
     }

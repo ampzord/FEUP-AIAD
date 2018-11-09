@@ -115,7 +115,8 @@ public class Venue extends Agent {
 
     public void setup() {
         setVenueInformation();
-        printVenueInformation();
+        if(Utils.DEBUG)
+            printVenueInformation();
         registerToDFService();
 
         searchBands();

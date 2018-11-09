@@ -67,7 +67,8 @@ public class Band extends Agent {
 
     public void setup() {
         setBandInformation();
-        printBandInformation();
+        if(Utils.DEBUG)
+            printBandInformation();
         registerToDFService();
 
         addBehaviour(new RequestResponder(this, MessageTemplate.MatchPerformative(ACLMessage.REQUEST)));
