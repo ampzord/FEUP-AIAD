@@ -67,7 +67,8 @@ public class Band extends Agent {
 
     public void setup() {
         setBandInformation();
-        printBandInformation();
+        if(Utils.DEBUG)
+            printBandInformation();
         registerToDFService();
 
         addBehaviour(new RequestResponder(this, MessageTemplate.MatchPerformative(ACLMessage.REQUEST)));
@@ -133,7 +134,7 @@ public class Band extends Agent {
             switch (request.getOntology()) {
                 case "Give_BusinessCard":
                     if(Utils.DEBUG)
-                        System.out.println(getLocalName() + "says: I'll give you my business card!");
+                        System.out.println(getLocalName() + " Giving Business Card");
 
                     String[] tokens = request.getContent().split("::");
                     int attendance = Integer.parseInt(tokens[0]);
@@ -150,7 +151,7 @@ public class Band extends Agent {
 
                 case "Hiring":
                     if(Utils.DEBUG)
-                        System.out.println(getLocalName() + " says THEN GIB THE MONEIS!!!!");
+                        System.out.println(getLocalName() + " currently Hiring");
 
                     int proposed_payment = Integer.parseInt(request.getContent());
                     all_proposals.add(new Pair<>(request.getSender().getLocalName(),proposed_payment));

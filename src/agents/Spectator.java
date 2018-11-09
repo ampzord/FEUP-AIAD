@@ -1,6 +1,16 @@
 package agents;
+import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
+import utils.Utils;
+import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.domain.DFService;
+import jade.lang.acl.ACLMessage;
+import jade.domain.FIPAAgentManagement.ServiceDescription;
+import jade.domain.FIPAException;
+import jade.proto.AchieveREInitiator;
+
+import java.util.Vector;
 
 public class Spectator extends Agent {
 
@@ -8,7 +18,7 @@ public class Spectator extends Agent {
     private int min_genre_spectrum;
     private int max_genre_spectrum;
     private int location;
-    private DFAgentDescrpition[] available_spectators;
+    private DFAgentDescription[] available_venues;
 
     @Override
     public String toString() {
@@ -44,7 +54,7 @@ public class Spectator extends Agent {
         this.location = location;
     }
     public DFAgentDescription[] getAvailable_venues() {
-        return setAvailable_venues;
+        return available_venues;
     }
     public void setAvailable_venues(DFAgentDescription[] getAvailable_venues){
         this.available_venues = available_venues;
@@ -52,11 +62,12 @@ public class Spectator extends Agent {
 
     public void setup() {
         setSpectatorInformation();
-        printSpectatorInformation();
+        if(Utils.DEBUG)
+            printSpectatorInformation();
 
         searchVenues();
 
-        //get venues of interes based on the bands they have playing
+        //get venues of interest based on the bands they have playing
         addBehaviour(new VenueGetter(this, new ACLMessage(ACLMessage.REQUEST)));
     }
 
@@ -97,12 +108,45 @@ public class Spectator extends Agent {
             }
     }
 
-    class VenueGetter extends Behaviour {
-        public void action() {
+    class VenueGetter extends AchieveREInitiator {
+
+        public VenueGetter(Agent a, ACLMessage msg) {
+            super(a, msg);
         }
-        public boolean done() {
-            return true;
+
+        protected Vector<ACLMessage> prepareRequests(ACLMessage msg) {
+            Vector<ACLMessage> v = new Vector<>();
+
+            if(Utils.DEBUG) {
+                System.out.println();
+                for (int i = 0; i < available_venues.length; i++) {
+                    msg.addReceiver(new AID(available_venues[i].getName().getLocalName(), false));
+                    System.out.println(getLocalName() + " - Sending Request to " + available_venues[i].getName().getLocalName());
+                }
+            }
+
+            msg.setOntology("Give_Preferences");
+            String content = budget + "::" + min_genre_spectrum + "::" + max_genre_spectrum;
+            msg.setContent(content);
+
+            v.add(msg);
+
+            return v;
         }
+
+        protected void handleAgree(ACLMessage agree) {
+        }
+
+        protected void handleRefuse(ACLMessage refuse) {
+        }
+
+        protected void handleInform(ACLMessage inform) {
+        }
+
+        protected void handleFailure(ACLMessage failure) {
+            // nothing to see here
+        }
+
     }
 
 }
