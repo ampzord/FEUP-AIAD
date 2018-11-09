@@ -562,9 +562,14 @@ public class Venue extends Agent {
             ACLMessage reply = request.createReply();
 
             switch (request.getOntology()) {
-                case "Requesting_Show":
-                    //TODO: decidir o preco
+                case "Confirming_Presence":
+                    //TODO: decidir o preco dos bilhetes
+                    //TODO: add show
+                    //TODO: ver se e' necessario desperation behaviour
+                    //TODO: reset de tudo e update do budget
 
+                    break;
+                default:
                     break;
             }
 
