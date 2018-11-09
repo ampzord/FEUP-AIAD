@@ -37,8 +37,6 @@ public class Venue extends Agent {
     private int requests_done;
     private VenueBehaviour behaviour;
 
-
-
     @Override
     public String toString() {
         return String.format("Venue - %1$-15s", this.getAID().getLocalName())

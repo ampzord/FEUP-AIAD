@@ -14,11 +14,16 @@ import java.util.Vector;
 
 public class Spectator extends Agent {
 
+    public enum SpectatorBehaviour {
+        SPEC1, SPEC2, SPEC3;
+    }
+
     private int budget;
     private int min_genre_spectrum;
     private int max_genre_spectrum;
     private int location;
     private DFAgentDescription[] available_venues;
+    private SpectatorBehaviour behaviour;
 
     @Override
     public String toString() {
@@ -26,8 +31,11 @@ public class Spectator extends Agent {
                 + " Budget=" + budget
                 + ", Min Genre Spectrum=" + min_genre_spectrum
                 + ", Max Genre Spectrum=" + max_genre_spectrum
-                + ", Location=" + location;
+                + ", Location=" + location
+                + ", Behaviour=" + behaviour;
     }
+
+
 
     public int getBudget() {
         return budget;
@@ -58,6 +66,21 @@ public class Spectator extends Agent {
     }
     public void setAvailable_venues(DFAgentDescription[] getAvailable_venues){
         this.available_venues = available_venues;
+    }
+    private void setBehaviour(String name) {
+        switch (name) {
+            case "SPEC1":
+                behaviour = SpectatorBehaviour.SPEC1;
+                break;
+
+            case "SPEC2":
+                behaviour = SpectatorBehaviour.SPEC2;
+                break;
+
+            case "SPEC3":
+                behaviour = SpectatorBehaviour.SPEC3;
+                break;
+        }
     }
 
     public void setup() {
