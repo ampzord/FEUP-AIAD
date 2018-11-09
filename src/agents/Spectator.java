@@ -15,7 +15,7 @@ import java.util.Vector;
 public class Spectator extends Agent {
 
     public enum SpectatorBehaviour {
-        SPEC1, SPEC2, SPEC3;
+        MOSTBANDS, MOSTPRESTIGE, LEASTDISTANCE, LEASTCOST;
     }
 
     private int budget;
@@ -34,8 +34,6 @@ public class Spectator extends Agent {
                 + ", Location=" + location
                 + ", Behaviour=" + behaviour;
     }
-
-
 
     public int getBudget() {
         return budget;
@@ -69,16 +67,19 @@ public class Spectator extends Agent {
     }
     private void setBehaviour(String name) {
         switch (name) {
-            case "SPEC1":
-                behaviour = SpectatorBehaviour.SPEC1;
+            case "MOSTBANDS":
+                behaviour = SpectatorBehaviour.MOSTBANDS;
                 break;
 
-            case "SPEC2":
-                behaviour = SpectatorBehaviour.SPEC2;
+            case "MOSTPRESTIGE":
+                behaviour = SpectatorBehaviour.MOSTPRESTIGE;
+
+            case "LEASTDISTANCE":
+                behaviour = SpectatorBehaviour.LEASTDISTANCE;
                 break;
 
-            case "SPEC3":
-                behaviour = SpectatorBehaviour.SPEC3;
+            case "LEASTCOST":
+                behaviour = SpectatorBehaviour.LEASTCOST;
                 break;
         }
     }
@@ -99,12 +100,12 @@ public class Spectator extends Agent {
         setMin_genre_spectrum((int)getArguments()[1]);
         setMax_genre_spectrum((int)getArguments()[2]);
         setLocation((int)getArguments()[3]);
+        setBehaviour((String) getArguments()[4]);
     }
 
     private void printSpectatorInformation() {
         System.out.println(this.toString());
     }
-
 
     public void takeDown() {
         System.out.println(getLocalName() + ": done working");
@@ -167,7 +168,6 @@ public class Spectator extends Agent {
         }
 
         protected void handleFailure(ACLMessage failure) {
-            // nothing to see here
         }
 
     }
