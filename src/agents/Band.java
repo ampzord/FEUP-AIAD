@@ -235,12 +235,12 @@ public class Band extends Agent {
             for (int i = 0; i < all_proposals.size(); i++) {
                 ACLMessage m = new ACLMessage(ACLMessage.REQUEST);
 
-                if (current_shows < Utils.MAX_SHOWS_PER_BAND && all_proposals.get(i).getValue()>min_price) {
+                if (current_shows < Utils.MAX_SHOWS_PER_BAND && all_proposals.get(i).getValue() > min_price) {
                     current_shows++;
                     m.setOntology("Confirming_Presence");
                     m.addReceiver(new AID(all_proposals.get(i).getKey(), false));
                     //System.out.println(getLocalName() + " vvv Confirming_Presence vvv @ " + all_proposals.get(i).getKey() + " for " + all_proposals.get(i).getValue() + "$");
-                    String content = getLocalName() + "::" + all_proposals.get(i).getValue();
+                    String content = getLocalName() + "::" + all_proposals.get(i).getValue() + "::" + prestige;
                     m.setContent(content);
                 } else {
                     m.setOntology("Refusing_Show");

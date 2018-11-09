@@ -12,6 +12,7 @@ public class Utils {
 
     public static ArrayList<Object[]> spectatorsInformation;
     public final static int ITENERATION_COST_PER_DISTANCE = 10;
+    public final static int SPECTATORS_PER_SPECTATOR_AGENT = 1000;
     public final static int MAX_SHOWS_PER_BAND = 1;
 
     public Utils() {

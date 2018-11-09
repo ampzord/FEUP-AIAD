@@ -15,6 +15,7 @@ import jade.lang.acl.MessageTemplate;
 import jade.proto.AchieveREInitiator;
 import jade.proto.AchieveREResponder;
 import javafx.util.Pair;
+import utils.Utils;
 
 public class Venue extends Agent {
 
@@ -22,7 +23,7 @@ public class Venue extends Agent {
         MOSTBANDS, MOSTPRESTIGE, MOSTPROFIT;
     }
 
-    private int attendance;
+    private int capacity;
     private int budget;
     private int min_genre_spectrum;
     private int max_genre_spectrum;
@@ -36,7 +37,7 @@ public class Venue extends Agent {
     private int requests_done;
     private int band_confirmations;
     private VenueBehaviour behaviour;
-    private boolean receivedCounterConfirmation;
+    private boolean receivedRefusal;
 
 
 
@@ -44,14 +45,14 @@ public class Venue extends Agent {
     public String toString() {
         return String.format("Venue - %1$-15s", this.getAID().getLocalName())
                 + String.format(" Attendance=%s, Budget=%s, Min Genre Spectrum=%s, Max Genre Spectrum=%s, Min Accept Prestige=%s, Max Accept Prestige=%s, Location=%s, Behaviour=%s",
-                this.attendance, this.budget, this.min_genre_spectrum, this.max_genre_spectrum, this.min_acceptable_prestige, this.max_acceptable_prestige, this.location, this.behaviour);
+                this.capacity, this.budget, this.min_genre_spectrum, this.max_genre_spectrum, this.min_acceptable_prestige, this.max_acceptable_prestige, this.location, this.behaviour);
     }
 
-    public void setAttendance(int attendance) {
-        this.attendance = attendance;
+    public void setCapacity(int capacity) {
+        this.capacity = capacity;
     }
-    public int getAttendance() {
-        return this.attendance;
+    public int getCapacity() {
+        return this.capacity;
     }
     public void setBudget(int budget) {
         this.budget = budget;
@@ -133,8 +134,14 @@ public class Venue extends Agent {
         */
     }
 
+    private void retry () {
+        addBehaviour(new BandGetter(this, new ACLMessage(ACLMessage.REQUEST)));
+
+        addBehaviour(new ShowConfirmations(this, MessageTemplate.MatchPerformative(ACLMessage.REQUEST)));
+    }
+
     private void setVenueInformation() {
-        setAttendance((int)getArguments()[1]);
+        setCapacity((int)getArguments()[1]);
         setBudget((int)getArguments()[2]);
         setMin_genre_spectrum((int)getArguments()[3]);
         setMax_genre_spectrum((int)getArguments()[4]);
@@ -145,7 +152,7 @@ public class Venue extends Agent {
         possible_bands = new ArrayList<>();
         venue_proposal = new ArrayList<>();
         shows = new ArrayList<>();
-        receivedCounterConfirmation = false;
+        receivedRefusal = false;
 
         requests_done = 0;
         band_confirmations = 0;
@@ -239,7 +246,7 @@ public class Venue extends Agent {
             }
 
             msg.setOntology("Give_BusinessCard");
-            String content = attendance + "::" + min_genre_spectrum + "::" + max_genre_spectrum;
+            String content = capacity + "::" + min_genre_spectrum + "::" + max_genre_spectrum;
             msg.setContent(content);
 
             v.add(msg);
@@ -269,9 +276,14 @@ public class Venue extends Agent {
                 requests_done++;
 
                 if (available_bands.length == requests_done) {
+                    if (possible_bands.size() == 0) {
+                      System.out.println("VENUE : " + getLocalName() + " - " + "No bands available. Exiting...");
+                      return;
+                    }
                     /* compute the best bands to hire */
                     addBehaviour(new HireBands((Venue)getAgent()));
                     requests_done = 0;
+
                 }
             }
         }
@@ -307,6 +319,9 @@ public class Venue extends Agent {
                 case MOSTPRESTIGE:
                     //get mostprestige bands
                     getMostPrestigeBehaviour();
+                    break;
+
+                case MOSTPROFIT:
                     break;
 
                 default:
@@ -353,7 +368,9 @@ public class Venue extends Agent {
             int min_price = Integer.parseInt(content[2]);
             ACLMessage message = possible_bands.get(i);
 
-            if (remainder_budget > min_price) {
+            //TODO: HIGH PRIORITY --- ticket price
+
+            if (remainder_budget >= min_price && isProfitable(possible_bands.get(i))) {
                 remainder_budget -= min_price;
                 possible_bands.get(i).setContent(Integer.toString(min_price));
             }
@@ -363,6 +380,28 @@ public class Venue extends Agent {
             venue_proposal.add(possible_bands.get(i));
         }
 
+    }
+
+    private boolean isProfitable(ACLMessage aclMessage) {
+        String[] content = aclMessage.getContent().split("::");
+        int prestige = Integer.parseInt(content[1]);
+        int min_price = Integer.parseInt(content[2]);
+        int profit = getTicketPrice(prestige) * capacity * Utils.SPECTATORS_PER_SPECTATOR_AGENT - min_price;
+        //System.out.println("profit = " + profit);
+        if (profit >= 0) {
+            return true;
+        } else
+            return false;
+    }
+
+    /**
+     * Ticket price formula
+     * */
+    private int getTicketPrice (int p) {
+        if (capacity < 10)
+            return p*p*3+10- capacity;
+        else
+            return p*p*3+10;
     }
 
     private void getMostPrestigeBehaviour() {
@@ -382,6 +421,8 @@ public class Venue extends Agent {
             for (int j = 0; j < n-i-1; j++) {
                 String[] content1 = array.get(j).getContent().split("::");
                 String[] content2 = array.get(j+1).getContent().split("::");
+
+                System.out.println("asfasdfasdf " + array.get(i).getContent());
 
                 int rating1 = Integer.parseInt(content1[1]);
                 int rating2 = Integer.parseInt(content2[1]);
@@ -446,7 +487,7 @@ public class Venue extends Agent {
             int prestige = Integer.parseInt(content[1]);
             int min_price = Integer.parseInt(content[2]);
 
-            if (remainder_budget > min_price) {
+            if (remainder_budget >= min_price && isProfitable(array.get(i))) {
                 remainder_budget -= min_price;
                 total_prestige_score += prestigeScore(prestige);
             }
@@ -577,7 +618,7 @@ public class Venue extends Agent {
                 case "Refusing_Show":
                     reply.setOntology("Refusing_Show");
                     reply.setContent("Thank you for considering");
-                    receivedCounterConfirmation = true;
+                    receivedRefusal = true;
 
                     break;
             }
@@ -593,10 +634,13 @@ public class Venue extends Agent {
                     result.setContent("Added to line-up");
                     result.setPerformative(ACLMessage.INFORM);
 
+                    String[] content = request.getContent().split("::");
+                    int hiring_price = Integer.parseInt(content[1]);
+                    int prestige = Integer.parseInt(content[2]);
 
-                    //TODO: decidir o preco dos bilhetes
-                    //TODO: add show
-                    //TODO: update budget
+                    Pair <String, Integer> pair = new Pair<>(request.getSender().getLocalName(), getTicketPrice(prestige));
+                    shows.add(pair);
+                    budget = budget - hiring_price;
 
                     break;
 
@@ -607,14 +651,53 @@ public class Venue extends Agent {
                     break;
             }
 
-            if (band_confirmations == venue_proposal.size() && receivedCounterConfirmation) {
+            if (band_confirmations == venue_proposal.size() && receivedRefusal) {
+
+                //TODO: fazer o retry
+                /*
                 System.out.println();
                 System.out.println("VENUE : " + getLocalName() + " is ready for Spectator");
-                //TODO: reset de tudo
-                //TODO: restart initial behaviour
+                int i = 0;
+                for (Pair<String,Integer> pair : shows) {
+                    System.out.println("Band " + ++i + "= " + pair.getKey() + "; Ticket = " + pair.getValue());
+                }
+                */
+
+                /*
+                if (shows.size() == 0)
+                    widenSpectrums();
+                resetVariables();
+
+                //restart initial behaviour
+                retry();*/
             }
 
             return result;
+        }
+
+        private void widenSpectrums() {
+            //TODO: ANTONIO
+            /*
+            if (min_genre_spectrum > 10)
+                min_genre_spectrum -= 10;
+
+            if (max_genre_spectrum <= 90)
+                max_genre_spectrum += 10;
+
+            if (min_acceptable_prestige > 1)
+                min_acceptable_prestige -
+
+            if (max_acceptable_prestige != 5)
+
+            */
+        }
+
+        private void resetVariables() {
+            possible_bands = new ArrayList<>();
+            venue_proposal = new ArrayList<>();
+            requests_done = 0;
+            band_confirmations = 0;
+            receivedRefusal = false;
         }
 
     }
