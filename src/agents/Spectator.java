@@ -1,6 +1,7 @@
 package agents;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
+import utils.Utils;
 
 public class Spectator extends Agent {
 

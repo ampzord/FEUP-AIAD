@@ -15,6 +15,7 @@ import jade.lang.acl.MessageTemplate;
 import jade.proto.AchieveREInitiator;
 import jade.proto.AchieveREResponder;
 import javafx.util.Pair;
+import utils.Utils;
 
 public class Venue extends Agent {
 
@@ -224,12 +225,14 @@ public class Venue extends Agent {
         protected Vector<ACLMessage> prepareRequests(ACLMessage msg) {
             Vector<ACLMessage> v = new Vector<>();
 
-        if(Utils.DEBUG){
+        if(Utils.DEBUG) {
             System.out.println();
-            for(int i=0; i<available_bands.length; i++) {
+            for (int i = 0; i < available_bands.length; i++) {
                 msg.addReceiver(new AID(available_bands[i].getName().getLocalName(), false));
                 System.out.println(getLocalName() + " - Sending Request to " + available_bands[i].getName().getLocalName());
             }
+        }
+
 
             msg.setOntology("Give_BusinessCard");
             String content = attendance + "::" + min_genre_spectrum + "::" + max_genre_spectrum;
@@ -239,7 +242,6 @@ public class Venue extends Agent {
 
             return v;
             }
-        }
 
         protected void handleAgree(ACLMessage agree) {
         }
