@@ -366,6 +366,7 @@ public class Venue extends Agent {
                     break;
 
                 case MOSTPROFIT:
+                    getMostProfitBehaviour();
                     break;
 
                 default:
@@ -388,6 +389,9 @@ public class Venue extends Agent {
             return 0;
         }
 
+    }
+    private void getMostProfitBehaviour() {
+        //TODO: getMostProfitBehaviour
     }
 
     private void getMostBandsBehaviour() {
