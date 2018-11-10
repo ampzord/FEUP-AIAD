@@ -700,45 +700,33 @@ public class Venue extends Agent {
                 System.out.println("VENUE : " + getLocalName() + " currently has " + shows.size() + " shows. \n" +
                         "VENUE : " + getLocalName() + " will now try to hire bands with leftover budget (" + budget + ").");
 
-                resetVariables();
-                retry();
-
-
-                //TODO: fazer o retry
-                /*
-                int i = 0;
-                for (Pair<String,Integer> pair : shows) {
-                    System.out.println("Band " + ++i + "= " + pair.getKey() + "; Ticket = " + pair.getValue());
-                }
-                */
-
-                /*
                 if (shows.size() == 0)
                     widenSpectrums();
-                resetVariables();
 
-                //restart initial behaviour
-                retry();*/
+                resetVariables();
+                retry();
             }
 
             return result;
         }
 
         private void widenSpectrums() {
-            //TODO: ANTONIO
-            /*
             if (min_genre_spectrum > 10)
                 min_genre_spectrum -= 10;
+            else
+                min_genre_spectrum = 1;
 
             if (max_genre_spectrum <= 90)
                 max_genre_spectrum += 10;
+            else
+                max_genre_spectrum = 100;
 
             if (min_acceptable_prestige > 1)
-                min_acceptable_prestige -
+                min_acceptable_prestige -= 1;
 
-            if (max_acceptable_prestige != 5)
+            if (max_acceptable_prestige < 5)
+                max_acceptable_prestige += 1;
 
-            */
         }
 
         private void resetVariables() {
