@@ -15,6 +15,8 @@ public class Utils {
     public final static int SPECTATORS_PER_SPECTATOR_AGENT = 1000;
     public final static int MAX_SHOWS_PER_BAND = 1;
 
+    public final static boolean DEBUG = true;
+
     public Utils() {
     }
 
@@ -139,7 +141,7 @@ public class Utils {
                     aux++; continue;
                 }
 
-                Object[] spectator = new Object[4];
+                Object[] spectator = new Object[5];
                 String[] tokens = line.split(";");
 
                 if (!validInputOfSpectators(tokens))
@@ -149,6 +151,7 @@ public class Utils {
                 spectator[1] = Integer.parseInt(tokens[1]);
                 spectator[2] = Integer.parseInt(tokens[2]);
                 spectator[3] = Integer.parseInt(tokens[3]);
+                spectator[4] = tokens[4];
 
                 spectatorsInformation.add(spectator);
             }

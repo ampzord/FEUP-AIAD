@@ -2,23 +2,29 @@ package agents;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
-import jade.domain.DFService;
+import jade.proto.ContractNetInitiator;
+import utils.Utils;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
+import jade.domain.DFService;
+import jade.lang.acl.ACLMessage;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
-import jade.lang.acl.ACLMessage;
-import jade.lang.acl.MessageTemplate;
-import jade.proto.ContractNetInitiator;
-import jade.proto.ContractNetResponder;
+import jade.proto.AchieveREInitiator;
 
 import java.util.Vector;
 
 public class Spectator extends Agent {
 
+    public enum SpectatorBehaviour {
+        MOSTBANDS, MOSTPRESTIGE, LEASTDISTANCE, LEASTCOST;
+    }
+
     private int budget;
     private int min_genre_spectrum;
     private int max_genre_spectrum;
     private int location;
+    private DFAgentDescription[] available_venues;
+    private SpectatorBehaviour behaviour;
 
 
 
@@ -30,7 +36,8 @@ public class Spectator extends Agent {
                 + " Budget=" + budget
                 + ", Min Genre Spectrum=" + min_genre_spectrum
                 + ", Max Genre Spectrum=" + max_genre_spectrum
-                + ", Location=" + location;
+                + ", Location=" + location
+                + ", Behaviour=" + behaviour;
     }
 
     public int getBudget() {
@@ -57,39 +64,48 @@ public class Spectator extends Agent {
     public void setLocation(int location) {
         this.location = location;
     }
-    public DFAgentDescription[] getExistent_venues() {
-        return existent_venues;
+    public DFAgentDescription[] getAvailable_venues() {
+        return available_venues;
     }
-    public void setExistent_venues(DFAgentDescription[] existent_venues) {
-        this.existent_venues = existent_venues;
+    public void setAvailable_venues(DFAgentDescription[] getAvailable_venues){
+        this.available_venues = available_venues;
+    }
+    private void setBehaviour(String name) {
+        switch (name) {
+            case "MOSTBANDS":
+                behaviour = SpectatorBehaviour.MOSTBANDS;
+                break;
+
+            case "MOSTPRESTIGE":
+                behaviour = SpectatorBehaviour.MOSTPRESTIGE;
+
+            case "LEASTDISTANCE":
+                behaviour = SpectatorBehaviour.LEASTDISTANCE;
+                break;
+
+            case "LEASTCOST":
+                behaviour = SpectatorBehaviour.LEASTCOST;
+                break;
+        }
     }
 
     public void setup() {
         setSpectatorInformation();
-        printSpectatorInformation();
-        registerToDFService();
-        //addBehaviour(new WorkingBehaviour());
-    }
+        if(Utils.DEBUG)
+            printSpectatorInformation();
 
-    private void searchVenuesAgent() {
-        DFAgentDescription template = new DFAgentDescription();
-        ServiceDescription sd = new ServiceDescription();
-        sd.setType("venue");
-        template.addServices(sd);
-        try {
-            DFAgentDescription[] result = DFService.search(this, template);
-            setExistent_venues(result);
-        } catch(FIPAException fe) {
-            fe.printStackTrace();
-        }
-    }
+        searchVenues();
 
+        //get venues of interest based on the bands they have playing
+        //addBehaviour(new VenueGetter(this, new ACLMessage(ACLMessage.REQUEST)));
+    }
 
     private void setSpectatorInformation() {
         setBudget((int)getArguments()[0]);
         setMin_genre_spectrum((int)getArguments()[1]);
         setMax_genre_spectrum((int)getArguments()[2]);
         setLocation((int)getArguments()[3]);
+        setBehaviour((String) getArguments()[4]);
     }
 
     private void printSpectatorInformation() {
@@ -114,7 +130,27 @@ public class Spectator extends Agent {
         System.out.println(getLocalName() + ": done working");
     }
 
-/*
+    private void searchVenues() {
+        DFAgentDescription template = new DFAgentDescription();
+        ServiceDescription sd = new ServiceDescription();
+        sd.setType("venue");
+        template.addServices(sd);
+        try{
+            DFAgentDescription[] result = DFService.search(this, template);
+
+            if(Utils.DEBUG) {
+                System.out.println("Spectator " + getLocalName() + " found:");
+                for(int i = 0; i < result.length; i++){
+                    System.out.println("    " + result[i].getName().getLocalName());
+                }
+            }
+
+            setAvailable_venues(result);
+        } catch(FIPAException fe){
+            fe.printStackTrace();
+        }
+    }
+
     class InitiateNegotiationWithVenue extends ContractNetInitiator {
 
         public InitiateNegotiationWithVenue(Agent a, ACLMessage msg) {
@@ -124,24 +160,27 @@ public class Spectator extends Agent {
         protected Vector prepareCfps(ACLMessage cfp) {
             Vector v = new Vector();
             System.out.println();
-            for(int i=0; i < available_bands.length; i++) {
-                cfp.addReceiver(new AID(available_bands[i].getName().getLocalName(), false));
-                System.out.println(getLocalName() + " - Sending Call For Proposal (CFP) to " + available_spectators[i].getName().getLocalName());
+            for(int i=0; i < available_venues.length; i++) {
+                cfp.addReceiver(new AID(available_venues[i].getName().getLocalName(), false));
+                System.out.println(getLocalName() + " - Sending Call For Proposal (CFP) to " + available_venues[i].getName().getLocalName());
             }
 
+            /*
             String content = null;
             for (int i = 0; i < shows.size(); i++) {
                 if (i+1 == shows.size())
                     content += shows.get(i).getKey() + "," + shows.getValue();
                 else
                     content += shows.get(i).getKey() + "," + shows.getValue() + "::";
-            }
+            }*/
 
-            cfp.setContent(content);
+            cfp.setContent(getLocalName() + " looking for available venue");
             v.add(cfp);
             return v;
         }
 
+
+        /*
         protected void handleAllResponses(Vector responses, Vector acceptances) {
 
             System.out.println("\n" + getLocalName() + " got " + responses.size() + " responses!");
@@ -186,8 +225,8 @@ public class Spectator extends Agent {
             System.out.println("got " + resultNotifications.size() + " result notifs!");
         }
 
-
-    }
 */
+    }
 
 }
+
