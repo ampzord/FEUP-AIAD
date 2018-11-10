@@ -1,4 +1,7 @@
 package agents;
+import java.io.IOException;
+import java.io.Serializable;
+import java.sql.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Vector;
@@ -12,9 +15,11 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import jade.lang.acl.UnreadableException;
 import jade.proto.AchieveREInitiator;
 import jade.proto.AchieveREResponder;
 import jade.proto.ContractNetResponder;
+import javafx.util.Pair;
 import utils.Utils;
 
 public class Venue extends Agent {
@@ -126,6 +131,8 @@ public class Venue extends Agent {
         addBehaviour(new BandGetter(this, new ACLMessage(ACLMessage.REQUEST)));
 
         addBehaviour(new ShowConfirmations(this, MessageTemplate.MatchPerformative(ACLMessage.REQUEST)));
+
+        addBehaviour(new ReceiveTicketRequest(this, MessageTemplate.MatchPerformative(ACLMessage.CFP)));
     }
 
     private void retry () {
@@ -233,13 +240,13 @@ public class Venue extends Agent {
         protected Vector<ACLMessage> prepareRequests(ACLMessage msg) {
             Vector<ACLMessage> v = new Vector<>();
 
-        if(Utils.DEBUG) {
             System.out.println();
             for (int i = 0; i < available_bands.length; i++) {
                 msg.addReceiver(new AID(available_bands[i].getName().getLocalName(), false));
-                System.out.println(getLocalName() + " - Sending Request to " + available_bands[i].getName().getLocalName());
+                if(Utils.DEBUG)
+                    System.out.println(getLocalName() + " - Sending Request to " + available_bands[i].getName().getLocalName());
             }
-        }
+
 
 
             msg.setOntology("Give_BusinessCard");
@@ -719,22 +726,23 @@ public class Venue extends Agent {
         protected ACLMessage handleCfp(ACLMessage cfp) {
             System.out.println(getAID().getLocalName() + " received " + cfp.getContent() + " from " + cfp.getSender().getLocalName());
 
+            ACLMessage reply =reply = cfp.createReply();
 
-            /*
-            ArrayList<Object> show = new ArrayList<>();
-                    show.add(request.getSender().getLocalName());
-                    show.add(getTicketPrice(prestige));
-                    show.add(prestige);
-                    show.add(genre);
-             */
-            ACLMessage reply = cfp.createReply();
             if (line_up_ready) {
                 reply.setPerformative(ACLMessage.PROPOSE);
-                //String content = getLocalName() + "::" + prestige + "::" + min_price;
-                //reply.setContent(content);
-            } else {
+                String message = "";
+
+                //TODO pensar em formatar // se nao tiver nenhum show
+                message += location;
+                for (ArrayList<Object> show : shows) {
+                    message += "//" + show.get(0) + "::" + shows.get(1) + "::" + shows.get(2) + "::" + shows.get(3);
+                    System.out.println("zzzzz" + show.get(0).toString());
+                }
+                System.out.println("MENSAGEM ENVIADA : " + message);
+            }
+            else {
                 reply.setPerformative(ACLMessage.REFUSE);
-                reply.setContent("Venue " + getLocalName() + " not ready yet.");
+                reply.setContent("Venue not ready yet.");
             }
 
             return reply;
