@@ -106,7 +106,7 @@ public class Band extends Agent {
         unregisterFromDFService();
 
         if(Utils.DEBUG)
-            System.out.println(getLocalName() + ": done working");
+            System.out.println("BAND: " + getLocalName() + ": done working");
     }
 
     private void unregisterFromDFService() {
@@ -128,13 +128,13 @@ public class Band extends Agent {
 
         protected ACLMessage handleRequest(ACLMessage request) throws RefuseException {
             if(Utils.DEBUG)
-                System.out.println(getLocalName() + " received " + request.getContent() + " from " + request.getSender().getLocalName());
+                System.out.println("BAND: " + getLocalName() + " received " + request.getContent() + " from " + request.getSender().getLocalName());
             ACLMessage reply = request.createReply();
 
             switch (request.getOntology()) {
                 case "Give_BusinessCard":
                     if(Utils.DEBUG)
-                        System.out.println(getLocalName() + " Giving Business Card");
+                        System.out.println("BAND: " + getLocalName() + " Giving Business Card");
 
                     String[] tokens = request.getContent().split("::");
                     int attendance = Integer.parseInt(tokens[0]);
@@ -151,7 +151,7 @@ public class Band extends Agent {
 
                 case "Hiring":
                     if(Utils.DEBUG)
-                        System.out.println(getLocalName() + " currently Hiring");
+                        System.out.println("BAND: " + getLocalName() + " currently Hiring");
 
                     int proposed_payment = Integer.parseInt(request.getContent());
                     all_proposals.add(new Pair<>(request.getSender().getLocalName(),proposed_payment));
@@ -192,10 +192,10 @@ public class Band extends Agent {
                     result.setOntology("Hiring");
 
                     if (business_cards_handed == all_proposals.size()) {
-                        //System.out.println(getLocalName() + " RESPONDER A TODAS AS VENUES");
+                        if(Utils.DEBUG)
+                            System.out.println("BAND: " + getLocalName() + " will now respond to all Venues");
                         decideWhereToPlay();
 
-                        // TODO: mandar "request" para as venues a aceitar as propostas
                         addBehaviour(new ConfirmShow(this.myAgent, null));
                     }
 
@@ -241,7 +241,7 @@ public class Band extends Agent {
                     m.addReceiver(new AID(all_proposals.get(i).getKey(), false));
 
                     if (Utils.DEBUG)
-                        System.out.println(getLocalName() + " vvv Confirming_Presence vvv @ " + all_proposals.get(i).getKey() + " for " + all_proposals.get(i).getValue() + "$");
+                        System.out.println("BAND: " + getLocalName() + " vvv Confirming_Presence vvv @ " + all_proposals.get(i).getKey() + " for " + all_proposals.get(i).getValue() + "$");
                     String content = getLocalName() + "::" + all_proposals.get(i).getValue() + "::" + prestige + "::" + genre;
 
                     m.setContent(content);
@@ -250,7 +250,7 @@ public class Band extends Agent {
                     m.addReceiver(new AID(all_proposals.get(i).getKey(), false));
 
                     if(Utils.DEBUG)
-                        System.out.println(getLocalName() + " --- Ignore_Message --- from " + all_proposals.get(i).getKey());
+                        System.out.println("BAND: " + getLocalName() + " --- Ignore_Message --- from " + all_proposals.get(i).getKey());
 
                     m.setContent("");
                 } else {
@@ -258,7 +258,7 @@ public class Band extends Agent {
                     m.addReceiver(new AID(all_proposals.get(i).getKey(), false));
 
                     if(Utils.DEBUG)
-                        System.out.println(getLocalName() + " XXX Refusing_Show XXX @ " + all_proposals.get(i).getKey() + " for " + all_proposals.get(i).getValue() + "$");
+                        System.out.println("BAND: " + getLocalName() + " XXX Refusing_Show XXX @ " + all_proposals.get(i).getKey() + " for " + all_proposals.get(i).getValue() + "$");
 
                     m.setContent("");
                 }
