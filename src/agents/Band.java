@@ -240,7 +240,7 @@ public class Band extends Agent {
                     m.setOntology("Confirming_Presence");
                     m.addReceiver(new AID(all_proposals.get(i).getKey(), false));
                     //System.out.println(getLocalName() + " vvv Confirming_Presence vvv @ " + all_proposals.get(i).getKey() + " for " + all_proposals.get(i).getValue() + "$");
-                    String content = getLocalName() + "::" + all_proposals.get(i).getValue() + "::" + prestige;
+                    String content = getLocalName() + "::" + all_proposals.get(i).getValue() + "::" + prestige + "::" + genre;
                     m.setContent(content);
                 } else {
                     m.setOntology("Refusing_Show");

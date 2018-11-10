@@ -1,4 +1,5 @@
 package agents;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Vector;
@@ -34,7 +35,7 @@ public class Venue extends Agent {
     private DFAgentDescription[] available_bands;
     private ArrayList<ACLMessage> possible_bands;
     private ArrayList<ACLMessage> venue_proposal;
-    private ArrayList<Pair<String,Integer>> shows;
+    private ArrayList<ArrayList<Object>> shows;
     private int location;
     private int requests_done;
     private int band_confirmations;
@@ -102,10 +103,10 @@ public class Venue extends Agent {
     public void setVenue_proposal(ArrayList<ACLMessage> venue_proposal) {
         this.venue_proposal = venue_proposal;
     }
-    public ArrayList<Pair<String, Integer>> getShows() {
+    public ArrayList<ArrayList<Object>> getShows() {
         return shows;
     }
-    public void setShows(ArrayList<Pair<String, Integer>> shows) {
+    public void setShows(ArrayList<ArrayList<Object>> shows) {
         this.shows = shows;
     }
     public int getLocation() {
@@ -628,9 +629,15 @@ public class Venue extends Agent {
                     String[] content = request.getContent().split("::");
                     int hiring_price = Integer.parseInt(content[1]);
                     int prestige = Integer.parseInt(content[2]);
+                    int genre = Integer.parseInt(content[3]);
 
-                    Pair <String, Integer> pair = new Pair<>(request.getSender().getLocalName(), getTicketPrice(prestige));
-                    shows.add(pair);
+                    ArrayList<Object> show = new ArrayList<>();
+                    show.add(request.getSender().getLocalName());
+                    show.add(getTicketPrice(prestige));
+                    show.add(prestige);
+                    show.add(genre);
+
+                    shows.add(show);
                     budget = budget - hiring_price;
 
                     break;
@@ -644,10 +651,10 @@ public class Venue extends Agent {
 
             if (band_confirmations == venue_proposal.size() && receivedRefusal) {
 
-                //TODO: fazer o retry
-                /*
                 System.out.println();
                 System.out.println("VENUE : " + getLocalName() + " is ready for Spectator");
+                //TODO: fazer o retry
+                /*
                 int i = 0;
                 for (Pair<String,Integer> pair : shows) {
                     System.out.println("Band " + ++i + "= " + pair.getKey() + "; Ticket = " + pair.getValue());
