@@ -129,6 +129,8 @@ public class Venue extends Agent {
         searchBands();
 
         startBehaviours();
+
+        addBehaviour(new ReceiveTicketRequest(this, MessageTemplate.MatchPerformative(ACLMessage.CFP)));
     }
 
     private void startBehaviours() {
@@ -136,9 +138,6 @@ public class Venue extends Agent {
         addBehaviour(band_getter);
         show_confirmations = new ShowConfirmations(this, MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
         addBehaviour(show_confirmations);
-
-        //addBehaviour(new ReceiveTicketRequest(this, MessageTemplate.MatchPerformative(ACLMessage.CFP)));
-
     }
 
     private void retry () {
@@ -277,18 +276,20 @@ public class Venue extends Agent {
         }
 
         protected void handleRefuse(ACLMessage refuse) {
-            if(Utils.DEBUG)
-                System.out.println("VENUE: " + getLocalName() + " [BandGetter] received refuse from " + refuse.getSender().getLocalName());
-            requests_done++;
+            if (refuse.getOntology().equals("Give_BusinessCard")) {
+                if (Utils.DEBUG)
+                    System.out.println("VENUE: " + getLocalName() + " [BandGetter] received refuse from " + refuse.getSender().getLocalName());
+                requests_done++;
 
-            if (available_bands.length == requests_done) {
-                if(Utils.DEBUG)
-                    System.out.println("VENUE: " + getLocalName() + " [BandGetter] received " + possible_bands.size() + " business cards.");
+                if (available_bands.length == requests_done) {
+                    if (Utils.DEBUG)
+                        System.out.println("VENUE: " + getLocalName() + " [BandGetter] received " + possible_bands.size() + " business cards.");
 
-                if (possible_bands.size() == 0)
-                    return;
-                else
-                    hireBands();
+                    if (possible_bands.size() == 0)
+                        return;
+                    else
+                        hireBands();
+                }
             }
         }
 
@@ -668,80 +669,84 @@ public class Venue extends Agent {
         }
 
         protected ACLMessage handleRequest(ACLMessage request) throws RefuseException {
-            band_responses++;
-            if(Utils.DEBUG)
-                System.out.println("VENUE: " + getLocalName() + " received [ShowConfirmations] " + request.getOntology() + " from " + request.getSender().getLocalName());
             ACLMessage reply = request.createReply();
-            reply.setPerformative(ACLMessage.AGREE);
+            if (request.getOntology().equals("Confirming_Presence") || request.getOntology().equals("Ignore_Message") || request.getOntology().equals("Refusing_Show")) {
+                band_responses++;
+                if (Utils.DEBUG)
+                    System.out.println("VENUE: " + getLocalName() + " received [ShowConfirmations] " + request.getOntology() + " from " + request.getSender().getLocalName());
+                reply.setPerformative(ACLMessage.AGREE);
 
-            switch (request.getOntology()) {
-                case "Confirming_Presence":
-                    reply.setOntology("Confirming_Presence");
-                    reply.setContent("We will add you to our shows line-up");
-                    break;
-                case "Ignore_Message":
-                    reply.setOntology("Ignore_Message");
-                    reply.setContent("Thank you for considering");
-                    break;
-                case "Refusing_Show":
-                    reply.setOntology("Refusing_Show");
-                    reply.setContent("Thank you for considering");
-                    received_refusal = true;
-                    break;
+                switch (request.getOntology()) {
+                    case "Confirming_Presence":
+                        reply.setOntology("Confirming_Presence");
+                        reply.setContent("We will add you to our shows line-up");
+                        break;
+                    case "Ignore_Message":
+                        reply.setOntology("Ignore_Message");
+                        reply.setContent("Thank you for considering");
+                        break;
+                    case "Refusing_Show":
+                        reply.setOntology("Refusing_Show");
+                        reply.setContent("Thank you for considering");
+                        received_refusal = true;
+                        break;
+                }
+
             }
-
             return reply;
         }
 
         protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) {
             ACLMessage result = request.createReply();
 
-            switch (request.getOntology()) {
-                case "Confirming_Presence":
-                    result.setContent("Added to line-up");
-                    result.setPerformative(ACLMessage.INFORM);
+            if (request.getOntology().equals("Confirming_Presence") || request.getOntology().equals("Ignore_Message") || request.getOntology().equals("Refusing_Show")) {
 
-                    String[] content = request.getContent().split("::");
-                    int hiring_price = Integer.parseInt(content[1]);
-                    int prestige = Integer.parseInt(content[2]);
-                    int genre = Integer.parseInt(content[3]);
+                switch (request.getOntology()) {
+                    case "Confirming_Presence":
+                        result.setContent("Added to line-up");
+                        result.setPerformative(ACLMessage.INFORM);
 
-                    ArrayList<Object> show = new ArrayList<>();
-                    show.add(request.getSender().getLocalName());
-                    show.add(getTicketPrice(prestige));
-                    show.add(prestige);
-                    show.add(genre);
+                        String[] content = request.getContent().split("::");
+                        int hiring_price = Integer.parseInt(content[1]);
+                        int prestige = Integer.parseInt(content[2]);
+                        int genre = Integer.parseInt(content[3]);
 
-                    shows.add(show);
-                    budget = budget - hiring_price;
+                        ArrayList<Object> show = new ArrayList<>();
+                        show.add(request.getSender().getLocalName());
+                        show.add(getTicketPrice(prestige));
+                        show.add(prestige);
+                        show.add(genre);
 
-                    break;
+                        shows.add(show);
+                        budget = budget - hiring_price;
 
-                default:
-                    result.setContent("Ignore this message");
-                    result.setPerformative(ACLMessage.FAILURE);
+                        break;
 
-                    break;
-            }
+                    default:
+                        result.setContent("Ignore this message");
+                        result.setPerformative(ACLMessage.FAILURE);
 
-
-            //CRITICAL PRINT
-            //DO NOT REMOVE
-            //System.out.println("band_responses = " + band_responses + "  &&  venue_proposal.size() = " +  venue_proposal.size() + "  &&   received_refusal = " + received_refusal + "            ---- " + getLocalName());
-            if (band_responses == venue_proposal.size() && !received_refusal) {
-                if(Utils.DEBUG) {
-                    System.out.println();
-                    System.out.println("VENUE : " + getLocalName() + " [ShowConfirmations] currently has " + shows.size() + " shows. \n" +
-                            "VENUE : " + getLocalName() + " will now try to hire bands with leftover budget (" + budget + ").");
+                        break;
                 }
+
+
+                //CRITICAL PRINT
+                //DO NOT REMOVE
+                //System.out.println("band_responses = " + band_responses + "  &&  venue_proposal.size() = " +  venue_proposal.size() + "  &&   received_refusal = " + received_refusal + "            ---- " + getLocalName());
+                if (band_responses == venue_proposal.size() && !received_refusal) {
+                    if (Utils.DEBUG) {
+                        System.out.println();
+                        System.out.println("VENUE : " + getLocalName() + " [ShowConfirmations] currently has " + shows.size() + " shows. \n" +
+                                "VENUE : " + getLocalName() + " will now try to hire bands with leftover budget (" + budget + ").");
+                    }
+                }
+
+                if (shows.size() == 0)
+                    widenSpectrums();
+
+                resetVariables();
+                retry();
             }
-
-            if (shows.size() == 0)
-                widenSpectrums();
-
-            resetVariables();
-            retry();
-
             return result;
         }
 

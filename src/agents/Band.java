@@ -144,8 +144,10 @@ public class Band extends Agent {
                     if (evaluateAcceptance(attendance, min_genre_spectrum, max_genre_spectrum) && current_shows < Utils.MAX_SHOWS_PER_BAND) {
                         reply.setPerformative(ACLMessage.AGREE);
                         reply.setOntology("Give_BusinessCard");
-                    } else
-                        throw new RefuseException("Refused Request");
+                    } else {
+                        reply.setPerformative(ACLMessage.REFUSE);
+                        reply.setOntology("Give_BusinessCard");
+                    }
 
                     break;
 
