@@ -39,6 +39,7 @@ public class Venue extends Agent {
     private VenueBehaviour behaviour;
     private boolean received_refusal;
     private boolean line_up_ready;
+    private Behaviour band_getter, show_confirmations, hire_bands, request_contract;
 
     @Override
     public String toString() {
@@ -122,16 +123,29 @@ public class Venue extends Agent {
 
         searchBands();
 
-        //get interested bands
-        addBehaviour(new BandGetter(this, new ACLMessage(ACLMessage.REQUEST)));
+        startBehaviours();
+    }
 
-        addBehaviour(new ShowConfirmations(this, MessageTemplate.MatchPerformative(ACLMessage.REQUEST)));
+    private void startBehaviours() {
+        band_getter = new BandGetter(this, new ACLMessage(ACLMessage.REQUEST));
+        addBehaviour(band_getter);
+
+        show_confirmations = new ShowConfirmations(this, MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
+        addBehaviour(show_confirmations);
     }
 
     private void retry () {
-        addBehaviour(new BandGetter(this, new ACLMessage(ACLMessage.REQUEST)));
+        band_getter.block();
+        show_confirmations.block();
+        hire_bands.block();
+        request_contract.block();
 
-        addBehaviour(new ShowConfirmations(this, MessageTemplate.MatchPerformative(ACLMessage.REQUEST)));
+        removeBehaviour(band_getter);
+        removeBehaviour(show_confirmations);
+        removeBehaviour(hire_bands);
+        removeBehaviour(request_contract);
+
+        startBehaviours();
     }
 
     private void setVenueInformation() {
@@ -233,13 +247,13 @@ public class Venue extends Agent {
         protected Vector<ACLMessage> prepareRequests(ACLMessage msg) {
             Vector<ACLMessage> v = new Vector<>();
 
-        if(Utils.DEBUG) {
             System.out.println();
             for (int i = 0; i < available_bands.length; i++) {
                 msg.addReceiver(new AID(available_bands[i].getName().getLocalName(), false));
-                System.out.println(getLocalName() + " - Sending Request to " + available_bands[i].getName().getLocalName());
+                if(Utils.DEBUG)
+                    System.out.println(getLocalName() + " - Sending Request to " + available_bands[i].getName().getLocalName());
             }
-        }
+
 
 
             msg.setOntology("Give_BusinessCard");
@@ -260,9 +274,12 @@ public class Venue extends Agent {
             requests_done++;
 
             if (available_bands.length == requests_done) {
+                System.out.println("VENUE: " + getLocalName() + " received " + possible_bands.size() + " business cards.");
+                if (possible_bands.size() == 0)
+                    return;
+
                 /* compute the best bands to hire */
-                addBehaviour(new HireBands((Venue)getAgent()));
-                requests_done = 0;
+                hireBands();
             }
         }
 
@@ -270,19 +287,24 @@ public class Venue extends Agent {
             if (inform.getOntology().equals("Give_BusinessCard")) {
                 if(Utils.DEBUG)
                     System.out.println(getLocalName() + " received \"Give_BusinessCard\" INFORM " + inform.getContent() + " from " + inform.getSender().getLocalName());
-                possible_bands.add(inform);
+
+                String[] tokens = inform.getContent().split("::");
+                int min_price = Integer.parseInt(tokens[2]);
+
+                System.out.println("VENUE: " + getLocalName() + " current budget = " + budget);
+
+                if (min_price < budget)
+                    possible_bands.add(inform);
+
                 requests_done++;
 
                 if (available_bands.length == requests_done) {
-                    if (possible_bands.size() == 0) {
-                      System.out.println("VENUE : " + getLocalName() + " - " + "No bands available. Exiting...");
-                      line_up_ready = true;
-                      return;
-                    }
-                    /* compute the best bands to hire */
-                    addBehaviour(new HireBands((Venue)getAgent()));
-                    requests_done = 0;
+                    System.out.println("VENUE: " + getLocalName() + " received " + possible_bands.size() + " business cards.");
+                    if (possible_bands.size() == 0)
+                        return;
 
+                    /* compute the best bands to hire */
+                    hireBands();
                 }
             }
         }
@@ -291,6 +313,23 @@ public class Venue extends Agent {
             // nothing to see here
         }
 
+        private void hireBands() {
+            hire_bands = new HireBands((Venue)getAgent());
+            addBehaviour(hire_bands);
+            requests_done = 0;
+        }
+
+        @Override
+        public int onEnd() {
+            if (possible_bands.size() == 0) {
+                System.out.println("VENUE : " + getLocalName() + " - " + "No bands available. Exiting...");
+                line_up_ready = true;
+            }
+
+            myAgent.removeBehaviour(this);
+
+            return 0;
+        }
     }
 
 
@@ -337,7 +376,8 @@ public class Venue extends Agent {
 
         @Override
         public int onEnd() {
-            addBehaviour(new RequestContract(venue, null));
+            request_contract = new RequestContract(venue, null);
+            addBehaviour(request_contract);
 
             return 0;
         }
@@ -366,9 +406,6 @@ public class Venue extends Agent {
         for (int i = 0; i < possible_bands.size(); i++) {
             String[] content = possible_bands.get(i).getContent().split("::");
             int min_price = Integer.parseInt(content[2]);
-            ACLMessage message = possible_bands.get(i);
-
-            //TODO: HIGH PRIORITY --- ticket price
 
             if (remainder_budget >= min_price && isProfitable(possible_bands.get(i))) {
                 remainder_budget -= min_price;
@@ -420,8 +457,6 @@ public class Venue extends Agent {
             for (int j = 0; j < n-i-1; j++) {
                 String[] content1 = array.get(j).getContent().split("::");
                 String[] content2 = array.get(j+1).getContent().split("::");
-
-                System.out.println("asfasdfasdf " + array.get(i).getContent());
 
                 int rating1 = Integer.parseInt(content1[1]);
                 int rating2 = Integer.parseInt(content2[1]);
@@ -614,13 +649,15 @@ public class Venue extends Agent {
                 case "Confirming_Presence":
                     reply.setOntology("Confirming_Presence");
                     reply.setContent("We will add you to our shows line-up");
-
+                    break;
+                case "Ignore_Message":
+                    reply.setOntology("Ignore_Message");
+                    reply.setContent("Thank you for considering");
                     break;
                 case "Refusing_Show":
                     reply.setOntology("Refusing_Show");
                     reply.setContent("Thank you for considering");
                     received_refusal = true;
-
                     break;
             }
 
@@ -651,17 +688,22 @@ public class Venue extends Agent {
 
                     break;
 
-                case "Refusing_Show" :
+                default:
                     result.setContent("Ignore this message");
                     result.setPerformative(ACLMessage.FAILURE);
 
                     break;
             }
 
-            if (band_responses == venue_proposal.size() && received_refusal) {
-
+            if (band_responses == venue_proposal.size() && !received_refusal) {
                 System.out.println();
-                System.out.println("VENUE : " + getLocalName() + " is ready for Spectator");
+                System.out.println("VENUE : " + getLocalName() + " currently has " + shows.size() + " shows. \n" +
+                        "VENUE : " + getLocalName() + " will now try to hire bands with leftover budget (" + budget + ").");
+
+                resetVariables();
+                retry();
+
+
                 //TODO: fazer o retry
                 /*
                 int i = 0;
