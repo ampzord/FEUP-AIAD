@@ -165,16 +165,7 @@ public class Spectator extends Agent {
                 System.out.println(getLocalName() + " - Sending Call For Proposal (CFP) to " + available_venues[i].getName().getLocalName());
             }
 
-            /*
-            String content = null;
-            for (int i = 0; i < shows.size(); i++) {
-                if (i+1 == shows.size())
-                    content += shows.get(i).getKey() + "," + shows.getValue();
-                else
-                    content += shows.get(i).getKey() + "," + shows.getValue() + "::";
-            }*/
-
-            cfp.setContent(getLocalName() + " looking for available venue");
+            cfp.setContent(getLocalName() + " is the Venue ready?");
             v.add(cfp);
             return v;
         }

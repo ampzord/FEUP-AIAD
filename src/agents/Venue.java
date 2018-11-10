@@ -1,5 +1,4 @@
 package agents;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Vector;
@@ -15,9 +14,7 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.proto.AchieveREInitiator;
 import jade.proto.AchieveREResponder;
-import jade.proto.ContractNetInitiator;
 import jade.proto.ContractNetResponder;
-import javafx.util.Pair;
 import utils.Utils;
 
 public class Venue extends Agent {
@@ -38,9 +35,10 @@ public class Venue extends Agent {
     private ArrayList<ArrayList<Object>> shows;
     private int location;
     private int requests_done;
-    private int band_confirmations;
+    private int band_responses;
     private VenueBehaviour behaviour;
-    private boolean receivedRefusal;
+    private boolean received_refusal;
+    private boolean line_up_ready;
 
     @Override
     public String toString() {
@@ -148,10 +146,10 @@ public class Venue extends Agent {
         possible_bands = new ArrayList<>();
         venue_proposal = new ArrayList<>();
         shows = new ArrayList<>();
-        receivedRefusal = false;
-
+        received_refusal = false;
+        line_up_ready = false;
         requests_done = 0;
-        band_confirmations = 0;
+        band_responses = 0;
     }
 
     private void setBehaviour(String name) {
@@ -278,6 +276,7 @@ public class Venue extends Agent {
                 if (available_bands.length == requests_done) {
                     if (possible_bands.size() == 0) {
                       System.out.println("VENUE : " + getLocalName() + " - " + "No bands available. Exiting...");
+                      line_up_ready = true;
                       return;
                     }
                     /* compute the best bands to hire */
@@ -606,7 +605,7 @@ public class Venue extends Agent {
         }
 
         protected ACLMessage handleRequest(ACLMessage request) throws RefuseException {
-            band_confirmations++;
+            band_responses++;
             //System.out.println(getLocalName() + " received " + request.getOntology() + " from " + request.getSender().getLocalName());
             ACLMessage reply = request.createReply();
             reply.setPerformative(ACLMessage.AGREE);
@@ -620,7 +619,7 @@ public class Venue extends Agent {
                 case "Refusing_Show":
                     reply.setOntology("Refusing_Show");
                     reply.setContent("Thank you for considering");
-                    receivedRefusal = true;
+                    received_refusal = true;
 
                     break;
             }
@@ -659,7 +658,7 @@ public class Venue extends Agent {
                     break;
             }
 
-            if (band_confirmations == venue_proposal.size() && receivedRefusal) {
+            if (band_responses == venue_proposal.size() && received_refusal) {
 
                 System.out.println();
                 System.out.println("VENUE : " + getLocalName() + " is ready for Spectator");
@@ -704,13 +703,13 @@ public class Venue extends Agent {
             possible_bands = new ArrayList<>();
             venue_proposal = new ArrayList<>();
             requests_done = 0;
-            band_confirmations = 0;
-            receivedRefusal = false;
+            band_responses = 0;
+            received_refusal = false;
         }
 
     }
 
-     /*
+
     class ReceiveTicketRequest extends ContractNetResponder {
 
         public ReceiveTicketRequest(Agent a, MessageTemplate mt) {
@@ -719,39 +718,28 @@ public class Venue extends Agent {
 
         protected ACLMessage handleCfp(ACLMessage cfp) {
             System.out.println(getAID().getLocalName() + " received " + cfp.getContent() + " from " + cfp.getSender().getLocalName());
-            String[] tokens = cfp.getContent().split("::");
-
-            for (String token : tokens) {
-                token
-            }
 
 
-            int attendance = Integer.parseInt(tokens[0]);
-
-            int min_genre_spectrum = Integer.parseInt(tokens[1]);
-            int max_genre_spectrum = Integer.parseInt(tokens[2]);
-
+            /*
+            ArrayList<Object> show = new ArrayList<>();
+                    show.add(request.getSender().getLocalName());
+                    show.add(getTicketPrice(prestige));
+                    show.add(prestige);
+                    show.add(genre);
+             */
             ACLMessage reply = cfp.createReply();
-            if (evaluateAcceptance(attendance, min_genre_spectrum, max_genre_spectrum) && current_shows < Utils.MAX_SHOWS_PER_BAND) {
+            if (line_up_ready) {
                 reply.setPerformative(ACLMessage.PROPOSE);
-
-                String content = getLocalName() + "::" + prestige + "::" + min_price;
-                reply.setContent(content);
-                business_cards_handed++;
+                //String content = getLocalName() + "::" + prestige + "::" + min_price;
+                //reply.setContent(content);
             } else {
                 reply.setPerformative(ACLMessage.REFUSE);
-                reply.setContent("Your proposal doesn't fit our requirements");
+                reply.setContent("Venue " + getLocalName() + " not ready yet.");
             }
 
             return reply;
         }
-
-        public boolean evaluateAcceptance(int attendance, int min_genre_spectrum, int max_genre_spectrum) {
-            if (attendance >= min_attendance && min_genre_spectrum <= genre && genre <= max_genre_spectrum)
-                return true;
-            return false;
-        }
-
+        /*
         protected void handleRejectProposal(ACLMessage cfp, ACLMessage propose, ACLMessage reject) {
             System.out.println(myAgent.getLocalName() + " got a reject from " + reject.getSender().getLocalName());
             business_cards_handed--;
@@ -795,6 +783,7 @@ public class Venue extends Agent {
             }
 
             return result;
-        }
-        */
+        }*/
+
     }
+}
