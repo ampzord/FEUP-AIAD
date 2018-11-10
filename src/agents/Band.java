@@ -128,13 +128,13 @@ public class Band extends Agent {
 
         protected ACLMessage handleRequest(ACLMessage request) throws RefuseException {
             if(Utils.DEBUG)
-                System.out.println("BAND: " + getLocalName() + " received " + request.getContent() + " from " + request.getSender().getLocalName());
+                System.out.println("BAND: " + getLocalName() + " [RequestResponder] received " + request.getOntology() + " from " + request.getSender().getLocalName());
             ACLMessage reply = request.createReply();
 
             switch (request.getOntology()) {
                 case "Give_BusinessCard":
                     if(Utils.DEBUG)
-                        System.out.println("BAND: " + getLocalName() + " Giving Business Card");
+                        System.out.println("BAND: " + getLocalName() + " [RequestResponder] Giving Business Card to " + request.getSender().getLocalName());
 
                     String[] tokens = request.getContent().split("::");
                     int attendance = Integer.parseInt(tokens[0]);
@@ -151,7 +151,7 @@ public class Band extends Agent {
 
                 case "Hiring":
                     if(Utils.DEBUG)
-                        System.out.println("BAND: " + getLocalName() + " currently Hiring");
+                        System.out.println("BAND: " + request.getSender().getLocalName() + " hiring " + getLocalName());
 
                     int proposed_payment = Integer.parseInt(request.getContent());
                     all_proposals.add(new Pair<>(request.getSender().getLocalName(),proposed_payment));
@@ -216,6 +216,12 @@ public class Band extends Agent {
                     }
                 }
             }
+        }
+
+        @Override
+        public int onEnd() {
+            System.out.println("BAND FECHOU");
+            return 0;
         }
     }
 

@@ -15,7 +15,7 @@ public class Utils {
     public final static int SPECTATORS_PER_SPECTATOR_AGENT = 1000;
     public final static int MAX_SHOWS_PER_BAND = 1;
 
-    public final static boolean DEBUG = true;
+    public final static boolean DEBUG = false;
 
     public Utils() {
     }

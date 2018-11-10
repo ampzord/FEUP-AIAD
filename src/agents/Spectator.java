@@ -95,7 +95,7 @@ public class Spectator extends Agent {
         searchVenues();
 
         //get venues of interest based on the bands they have playing
-        addBehaviour(new InitiateNegotiationWithVenue(this, new ACLMessage(ACLMessage.CFP)));
+        //addBehaviour(new InitiateNegotiationWithVenue(this, new ACLMessage(ACLMessage.CFP)));
     }
 
     private void setSpectatorInformation() {
