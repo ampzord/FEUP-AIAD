@@ -2,6 +2,7 @@ package agents;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
+import jade.proto.ContractNetInitiator;
 import utils.Utils;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.DFService;
@@ -92,7 +93,7 @@ public class Spectator extends Agent {
         searchVenues();
 
         //get venues of interest based on the bands they have playing
-        addBehaviour(new VenueGetter(this, new ACLMessage(ACLMessage.REQUEST)));
+        //addBehaviour(new VenueGetter(this, new ACLMessage(ACLMessage.REQUEST)));
     }
 
     private void setSpectatorInformation() {
@@ -114,7 +115,7 @@ public class Spectator extends Agent {
     private void searchVenues() {
         DFAgentDescription template = new DFAgentDescription();
         ServiceDescription sd = new ServiceDescription();
-        sd.setType("spectator");
+        sd.setType("venue");
         template.addServices(sd);
         try{
             DFAgentDescription[] result = DFService.search(this, template);
@@ -129,47 +130,84 @@ public class Spectator extends Agent {
             setAvailable_venues(result);
         } catch(FIPAException fe){
             fe.printStackTrace();
-            }
+        }
     }
 
-    class VenueGetter extends AchieveREInitiator {
+    class InitiateNegotiationWithVenue extends ContractNetInitiator {
 
-        public VenueGetter(Agent a, ACLMessage msg) {
+        public InitiateNegotiationWithVenue(Agent a, ACLMessage msg) {
             super(a, msg);
         }
 
-        protected Vector<ACLMessage> prepareRequests(ACLMessage msg) {
-            Vector<ACLMessage> v = new Vector<>();
-
-            if(Utils.DEBUG) {
-                System.out.println();
-                for (int i = 0; i < available_venues.length; i++) {
-                    msg.addReceiver(new AID(available_venues[i].getName().getLocalName(), false));
-                    System.out.println(getLocalName() + " - Sending Request to " + available_venues[i].getName().getLocalName());
-                }
+        protected Vector prepareCfps(ACLMessage cfp) {
+            Vector v = new Vector();
+            System.out.println();
+            for(int i=0; i < available_venues.length; i++) {
+                cfp.addReceiver(new AID(available_venues[i].getName().getLocalName(), false));
+                System.out.println(getLocalName() + " - Sending Call For Proposal (CFP) to " + available_venues[i].getName().getLocalName());
             }
 
-            msg.setOntology("Give_Preferences");
-            String content = budget + "::" + min_genre_spectrum + "::" + max_genre_spectrum;
-            msg.setContent(content);
+            /*
+            String content = null;
+            for (int i = 0; i < shows.size(); i++) {
+                if (i+1 == shows.size())
+                    content += shows.get(i).getKey() + "," + shows.getValue();
+                else
+                    content += shows.get(i).getKey() + "," + shows.getValue() + "::";
+            }*/
 
-            v.add(msg);
-
+            cfp.setContent(getLocalName() + " looking for available venue");
+            v.add(cfp);
             return v;
         }
 
-        protected void handleAgree(ACLMessage agree) {
+
+        /*
+        protected void handleAllResponses(Vector responses, Vector acceptances) {
+
+            System.out.println("\n" + getLocalName() + " got " + responses.size() + " responses!");
+
+            for (int i=0; i<responses.size(); i++) {
+                ACLMessage rsp = (ACLMessage) responses.get(0);
+                String string = rsp.getContent();
+                if (!string.equals("Your proposal doesn't fit our requirements")) {
+                    String[] tokens = string.split("::");
+                    int min_price = Integer.parseInt(tokens[2]);
+
+                    if (min_price <= budget)
+                        possible_bands.add(rsp);
+                }
+            }
+
+            // TODO: algoritmo para escolher melhores shows
+            // placeholder price
+            String string = "Iron Maiden::5000";
+            venue_proposal.add(string);
+            String[] tokens = string.split("::");
+            String bandName = tokens[0];
+            int price = Integer.parseInt(tokens[1]);
+
+            //reply
+            for(int i=0; i<responses.size(); i++) {
+                ACLMessage rsp = (ACLMessage) responses.get(i);
+                if (rsp.getSender().getLocalName().equals(bandName)) {
+                    ACLMessage msg = ((ACLMessage) responses.get(i)).createReply();
+                    msg.setPerformative(ACLMessage.ACCEPT_PROPOSAL); // OR NOT!
+                    msg.setContent(venue_proposal.get(0));
+                    acceptances.add(msg);
+                } else {
+                    ACLMessage msg = ((ACLMessage) responses.get(i)).createReply();
+                    msg.setPerformative(ACLMessage.REJECT_PROPOSAL); // OR NOT!
+                    acceptances.add(msg);
+                }
+            }
         }
 
-        protected void handleRefuse(ACLMessage refuse) {
+        protected void handleAllResultNotifications(Vector resultNotifications) {
+            System.out.println("got " + resultNotifications.size() + " result notifs!");
         }
 
-        protected void handleInform(ACLMessage inform) {
-        }
-
-        protected void handleFailure(ACLMessage failure) {
-        }
-
+*/
     }
 
 }

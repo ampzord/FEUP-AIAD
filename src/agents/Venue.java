@@ -278,9 +278,9 @@ public class Venue extends Agent {
     }
 
 
-    /*
+    /**
      *   Band Hirer
-     * */
+     */
     class HireBands extends Behaviour {
 
         Venue venue;
@@ -371,8 +371,7 @@ public class Venue extends Agent {
         calculateBestBandsInMostPrestigeBehaviour(possible_bands_ordered_by_prestige);
     }
 
-    private void sortBandsByBestRating(ArrayList<ACLMessage> array)
-    {
+    private void sortBandsByBestRating(ArrayList<ACLMessage> array) {
         int n = array.size();
         for (int i = 0; i < n-1; i++)
             for (int j = 0; j < n-i-1; j++) {
@@ -401,8 +400,7 @@ public class Venue extends Agent {
             }
     }
 
-    private void sortBandsByPrice(ArrayList<ACLMessage> array)
-    {
+    private void sortBandsByPrice(ArrayList<ACLMessage> array) {
         int n = array.size();
         for (int i = 0; i < n-1; i++)
             for (int j = 0; j < n-i-1; j++) {
@@ -577,4 +575,92 @@ public class Venue extends Agent {
         }
 
     }
-}
+
+     /*
+    class ReceiveTicketRequest extends ContractNetResponder {
+
+        public ReceiveTicketRequest(Agent a, MessageTemplate mt) {
+            super(a, mt);
+        }
+
+        protected ACLMessage handleCfp(ACLMessage cfp) {
+            System.out.println(getAID().getLocalName() + " received " + cfp.getContent() + " from " + cfp.getSender().getLocalName());
+            String[] tokens = cfp.getContent().split("::");
+
+            for (String token : tokens) {
+                token
+            }
+
+
+            int attendance = Integer.parseInt(tokens[0]);
+
+            int min_genre_spectrum = Integer.parseInt(tokens[1]);
+            int max_genre_spectrum = Integer.parseInt(tokens[2]);
+
+            ACLMessage reply = cfp.createReply();
+            if (evaluateAcceptance(attendance, min_genre_spectrum, max_genre_spectrum) && current_shows < Utils.MAX_SHOWS_PER_BAND) {
+                reply.setPerformative(ACLMessage.PROPOSE);
+
+                String content = getLocalName() + "::" + prestige + "::" + min_price;
+                reply.setContent(content);
+                business_cards_handed++;
+            } else {
+                reply.setPerformative(ACLMessage.REFUSE);
+                reply.setContent("Your proposal doesn't fit our requirements");
+            }
+
+            return reply;
+        }
+
+        public boolean evaluateAcceptance(int attendance, int min_genre_spectrum, int max_genre_spectrum) {
+            if (attendance >= min_attendance && min_genre_spectrum <= genre && genre <= max_genre_spectrum)
+                return true;
+            return false;
+        }
+
+        protected void handleRejectProposal(ACLMessage cfp, ACLMessage propose, ACLMessage reject) {
+            System.out.println(myAgent.getLocalName() + " got a reject from " + reject.getSender().getLocalName());
+            business_cards_handed--;
+        }
+
+        protected ACLMessage handleAcceptProposal(ACLMessage cfp, ACLMessage propose, ACLMessage accept) {
+            System.out.println(myAgent.getLocalName() + " got an accept from " + accept.getSender().getLocalName());
+            ACLMessage result = accept.createReply();
+
+            String[] tokens = accept.getContent().split("::");
+            int price = Integer.parseInt(tokens[1]);
+
+            Pair<String, Integer> pair = new Pair<>(accept.getSender().getLocalName() , price);
+            all_proposals.add(pair);
+
+            //wait for all proposals
+            System.out.println(getAID().getLocalName() + " is waiting for " + business_cards_handed + " proposals, currently have " + all_proposals.size());
+            while (business_cards_handed != all_proposals.size()) {
+                System.out.println(getAID().getLocalName() + " is waiting for more proposals");
+                try {
+                    TimeUnit.SECONDS.sleep(3);
+                } catch (Exception e) {
+                    System.out.println("band waiter is kaput");
+                }
+            }
+
+            int max = min_price;
+            int max_pos = 0;
+            for (int i=0; i<all_proposals.size(); i++) {
+                if (all_proposals.get(i).getValue() > max) {
+                    max = all_proposals.get(i).getValue();
+                    max_pos = i;
+                }
+            }
+
+            if (accept.getSender().getLocalName().equals(all_proposals.get(max_pos).getKey())) {
+                result.setPerformative(ACLMessage.INFORM);
+                result.setContent("Gib moneys");
+            } else {
+                result.setPerformative(ACLMessage.FAILURE);
+            }
+
+            return result;
+        }
+        */
+    }
