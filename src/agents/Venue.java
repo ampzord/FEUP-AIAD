@@ -15,6 +15,7 @@ import jade.lang.acl.MessageTemplate;
 import jade.proto.AchieveREInitiator;
 import jade.proto.AchieveREResponder;
 import jade.proto.ContractNetResponder;
+import javafx.util.Pair;
 import utils.Utils;
 
 public class Venue extends Agent {
@@ -412,8 +413,15 @@ public class Venue extends Agent {
 
         //TODO
         private void getMostProfitBehaviour() {
+
             ArrayList<ACLMessage> ordered_possible_bands = possible_bands;
+
+            /*for (ACLMessage band : possible_bands)
+                System.out.println(band.getContent());*/
+
             sortBands(ordered_possible_bands);
+            calculateBestBands(ordered_possible_bands);
+
         }
 
         private void getMostPrestigeBehaviour() {
@@ -455,9 +463,21 @@ public class Venue extends Agent {
 
         }
 
-        //TODO MostProfitBehaviour
         private void calculateBestBandsMostProfitBehaviour(ArrayList<ACLMessage> possible_bands) {
+            int remainder_budget = budget;
+            for (int i = 0; i < possible_bands.size(); i++) {
+                String[] content = possible_bands.get(i).getContent().split("::");
+                int min_price = Integer.parseInt(content[2]);
 
+                if (remainder_budget >= min_price && isProfitable(possible_bands.get(i))) {
+                    remainder_budget -= min_price;
+                    possible_bands.get(i).setContent(Integer.toString(min_price));
+                }
+                else {
+                    possible_bands.get(i).setContent("0");
+                }
+                venue_proposal.add(possible_bands.get(i));
+            }
         }
 
         private void calculateBestBandsMostPrestigeBehaviour(ArrayList<ACLMessage> possible_bands) {
@@ -513,7 +533,7 @@ public class Venue extends Agent {
                     sortBandsByLowestPrice(bands);
                     break;
                 case MOSTPROFIT:
-                    sortBandsbyMostProfit(bands);
+                    sortBandsByMostProfit(bands);
                     break;
                 case MOSTPRESTIGE:
                     sortBandsByMostPrestige(bands);
@@ -550,9 +570,22 @@ public class Venue extends Agent {
                 }
         }
 
-        //TODO MostProfitSort
-        private void sortBandsbyMostProfit(ArrayList<ACLMessage> ordered_possible_bands) {
+        private void sortBandsByMostProfit(ArrayList<ACLMessage> ordered_possible_bands) {
 
+            int n = ordered_possible_bands.size();
+            for (int i = 0; i < n-1; i++)
+                for (int j = 0; j < n-i-1; j++) {
+
+                    int profit1 = getProfit(ordered_possible_bands.get(j));
+                    int profit2 = getProfit(ordered_possible_bands.get(j+1));
+
+                    if (profit1 < profit2)
+                    {
+                        ACLMessage temp = ordered_possible_bands.get(j);
+                        ordered_possible_bands.set(j, ordered_possible_bands.get(j+1));
+                        ordered_possible_bands.set(j+1, temp);
+                    }
+                }
         }
 
         private void sortBandsByMostPrestige(ArrayList<ACLMessage> array) {
