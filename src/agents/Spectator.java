@@ -309,51 +309,46 @@ public class Spectator extends Agent {
 
                 switch (msg.getPerformative()) {
                     case ACLMessage.REFUSE:
-                        retry();
+                        //retry();
                         break;
                     case ACLMessage.PROPOSE:
-                        venue_has_shows++;
+                        //venue_has_shows++;
                         System.out.println("Spectator : " + getLocalName() + " has a proprosal from " + msg.getSender().getLocalName());
-                        //System.out.println("MESSAGE: " + msg.getContent().toString());
+                        System.out.println("MESSAGE: " + msg.getContent().toString());
 
                         String[] show = msg.getContent().split("//");
                         String venue_name = msg.getSender().getLocalName();
                         int venue_location = Integer.valueOf(show[0]);
 
-
                         for (int j = 1; j < show.length; j++) {
                             ACLMessage temp = msg;
                             String[] show_information = show[j].split("::");
 
-                            /*for(String info : show_information) {
-                                System.out.println("Info:" + info.toString());
-                            }*/
-
-                            String band_name = show_information[0];
+                            /*String band_name = show_information[0];
                             int ticket_price = Integer.valueOf(show_information[1]);
-                            int prestige = Integer.valueOf(show_information[2]);
+                            int prestige = Integer.valueOf(show_information[2]);*/
                             int genre = Integer.valueOf(show_information[3]);
 
                             String message = venue_name + "::" + venue_location + "::"
-                                    + show_information[0] + "::" + show_information[1]
+                                    + show_information[0] + "::" + show_information[1] + "::"
                                     + show_information[2] + "::" + show_information[3];
 
                             if (genre >= min_genre_spectrum && genre <= max_genre_spectrum) {
                                 temp.setContent(message);
+
+                                System.out.println("OLA " + temp.getContent());
                                 wanted_shows.add(temp);
                             }
 
                         }
-
-                        for(ACLMessage asd : wanted_shows) {
-                            System.out.println("Info:   " + asd.getContent().toString());
-                        }
-
                         break;
-
                 }
+
             }
 
+            for(ACLMessage asd : wanted_shows) {
+                System.out.println("Wanted shows by : " + getLocalName() + " - " + asd.getContent().toString());
+            }
         }
 
         protected void handleAllResultNotifications(Vector resultNotifications) {

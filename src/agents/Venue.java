@@ -814,8 +814,6 @@ public class Venue extends Agent {
 
             ACLMessage reply = cfp.createReply();
 
-            //System.out.println("Entered handleCfp1");
-
             if (line_up_ready) {
                 System.out.println("Lineup is ready!");
                 reply.setPerformative(ACLMessage.PROPOSE);
