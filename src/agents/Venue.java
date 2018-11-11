@@ -337,8 +337,7 @@ public class Venue extends Agent {
 
                 System.out.println("------------------------- VENUE: " + getLocalName() + " SHOWS: -------------------------");
                 for (ArrayList<Object> show : shows) {
-                    System.out.println("                     " + show.get(0));
-                    System.out.println("                       ticket: " + show.get(1));
+                    System.out.println("                     " + show.get(0)+ " \n                       ticket: " + show.get(1));
                 }
                 System.out.println("------------------------- ------------------------------------ -------------------------");
 
