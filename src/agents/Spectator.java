@@ -2,9 +2,7 @@ package agents;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
-import jade.lang.acl.UnreadableException;
 import jade.proto.ContractNetInitiator;
-import javafx.util.Pair;
 import utils.Utils;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.DFService;
@@ -14,6 +12,7 @@ import jade.domain.FIPAException;
 
 import java.util.ArrayList;
 import java.util.Vector;
+import java.util.Collections;
 
 public class Spectator extends Agent {
 
@@ -29,15 +28,15 @@ public class Spectator extends Agent {
     private ArrayList<ACLMessage> wanted_shows;
     private DFAgentDescription[] existent_venues;
     private SpectatorBehaviour behaviour;
-    private Behaviour init_negotiation;
+    private Behaviour init_negotiations;
     private int venue_has_shows;
+    private ArrayList<ACLMessage> show_proposals;
 
     @Override
     public String toString() {
         return String.format("Spectator - %s, Budget=%4s, Min Genre Spectrum=%s, Max Genre Spectrum=%s, Location=%s,Behaviour=%s",
                 this.getLocalName(), this.budget, this.min_genre_spectrum, this.max_genre_spectrum, this.location, this.behaviour);
     }
-
     public int getBudget() {
         return budget;
     }
@@ -95,14 +94,13 @@ public class Spectator extends Agent {
     }
 
     private void startBehaviours() {
-        init_negotiation = new InitiateNegotiationWithVenue(this, new ACLMessage(ACLMessage.CFP));
-        addBehaviour(init_negotiation);
+        init_negotiations = new InitiateNegotiationWithVenue(this, new ACLMessage(ACLMessage.CFP));
+        addBehaviour(init_negotiations);
     }
 
     private void retry() {
-        //System.out.println("SPECTATOR: " + getLocalName() + " retrying...");
-        init_negotiation.block();
-        removeBehaviour(init_negotiation);
+        init_negotiations.block();
+        removeBehaviour(init_negotiations);
         startBehaviours();
     }
 
@@ -115,6 +113,7 @@ public class Spectator extends Agent {
         //wanted_shows = new ArrayList<>();
         wanted_shows = new ArrayList<>();
         venue_has_shows = 0;
+        show_proposals = new ArrayList<>();
     }
 
     private void printSpectatorInformation() {
@@ -153,6 +152,40 @@ public class Spectator extends Agent {
     }
 
     /**
+     * Holds the decision making of a spectator on the show to watch
+     */
+    class ViewShow extends Behaviour {
+
+        Spectator spec;
+        boolean flag;
+
+        public ViewShow(Spectator spec) {
+            spec = spec;
+            flag = false;
+        }
+
+        @Override
+        public void action() {
+
+
+            flag = true;
+        }
+
+        @Override
+        public boolean done() {
+            return flag;
+        }
+
+        @Override
+        public int onEnd() {
+            System.out.println("Entered SpectatorBehaviour onEnd()");
+            return 0;
+        }
+
+
+    }
+
+    /**
      * Start communication with Venue to decide which shows the spectator will view
      */
     class InitiateNegotiationWithVenue extends ContractNetInitiator {
@@ -179,6 +212,7 @@ public class Spectator extends Agent {
 
             for (int i = 0; i < responses.size(); i++) {
                 ACLMessage msg = ((ACLMessage) responses.get(i));
+
                 switch (msg.getPerformative()) {
                     case ACLMessage.REFUSE:
                         //retry();
@@ -197,15 +231,15 @@ public class Spectator extends Agent {
                             String[] show_information = show[j].split("::");
 
                             /*String band_name = show_information[0];
-                            int ticket_price = Integer.valueOf(show_information[1]);
                             int prestige = Integer.valueOf(show_information[2]);*/
+                            int ticket_price = Integer.valueOf(show_information[1]);
                             int genre = Integer.valueOf(show_information[3]);
 
                             String message = venue_name + "::" + venue_location + "::"
                                     + show_information[0] + "::" + show_information[1] + "::"
                                     + show_information[2] + "::" + show_information[3];
 
-                            if (genre >= min_genre_spectrum && genre <= max_genre_spectrum) {
+                            if (genre >= min_genre_spectrum && genre <= max_genre_spectrum && ticket_price <= budget) {
                                 temp.setContent(message);
 
                                 System.out.println("OLA " + temp.getContent());
@@ -218,13 +252,37 @@ public class Spectator extends Agent {
 
             }
 
-            for(ACLMessage asd : wanted_shows) {
-                System.out.println("Wanted shows by : " + getLocalName() + " - " + asd.getContent());
+            if (wanted_shows.size() <= 0) {
+                System.out.println("SPECTATOR: " + getLocalName() + " no more shows available.");
+            } else {
+                for (ACLMessage asd : wanted_shows)
+                    System.out.println("Wanted shows by : " + getLocalName() + " - " + asd.getContent());
+
+                switch (behaviour) {
+                    case MOSTBANDS:
+                        System.out.println("Starting mostBands Spectator Behaviour");
+                        getMostBandsBehaviour();
+                        break;
+
+                    case MOSTPRESTIGE:
+                        System.out.println("Starting mostPrestige Spectator Behaviour");
+                        getMostPrestigeBehaviour();
+                        break;
+
+                    case LEASTCOST:
+                        System.out.println("Starting leastCost Spectator Behaviour");
+                        //TODO - duvida: isnt this shit the same as getMostBandsBehaviour()?
+                        break;
+
+                    case LEASTDISTANCE:
+                        System.out.println("Starting leastDistance Spectator Behaviour");
+                        getLeastDistanceBehaviour();
+                        break;
+
+                    default:
+                        break;
+                }
             }
-
-            handleBehaviours();
-
-
         }
 
         protected void handleAllResultNotifications(Vector resultNotifications) {
@@ -232,19 +290,7 @@ public class Spectator extends Agent {
                 System.out.println("Spectator: " + getLocalName() + " got " + resultNotifications.size() + " result notifications!");
         }
 
-        /* ---- */
-
-        private void handleBehaviours() {
-            switch (behaviour) {
-                case MOSTBANDS:
-                    System.out.println("Starting mostBands Spectator Behaviour");
-                    getMostBandsBehaviour();
-                    break;
-
-                default:
-                    break;
-            }
-        }
+        /* --- */
 
         private void getMostBandsBehaviour() {
             /*
@@ -252,20 +298,62 @@ public class Spectator extends Agent {
             sortBands(ordered_possible_bands);
             Collections.reverse(ordered_possible_bands);
             calculateBestBands(ordered_possible_bands);*/
-            System.out.println("ENTROU");
+
             ArrayList<ACLMessage> ordered_possible_bands = wanted_shows;
 
             for (ACLMessage show : ordered_possible_bands)
                 System.out.println(show.getContent());
 
-            System.out.println("DEPOIS");
-
             sortShows(ordered_possible_bands);
+
+            System.out.println("DEPOIS DE SORT");
 
             for (ACLMessage show : ordered_possible_bands)
                 System.out.println(show.getContent());
 
             //calculateBestShows(ordered_possible_bands);
+        }
+
+
+        private void getMostPrestigeBehaviour() {
+
+            sortShows(wanted_shows);
+            Collections.reverse(wanted_shows);
+
+            int remainder_budget = budget;
+            for (int i = 0; i < wanted_shows.size(); i++) {
+                String[] content = wanted_shows.get(i).getContent().split("::");
+                int min_price = Integer.parseInt(content[2]);
+
+                if (remainder_budget >= min_price) {
+                    remainder_budget -= min_price;
+                    wanted_shows.get(i).setContent(Integer.toString(min_price));
+                }
+                else {
+                    wanted_shows.get(i).setContent("0");
+                }
+                show_proposals.add(wanted_shows.get(i));
+            }
+        }
+
+        private void getLeastDistanceBehaviour() {
+
+            sortShows(wanted_shows);
+
+            int remainder_budget = budget;
+            for (int i = 0; i < wanted_shows.size(); i++) {
+                String[] content = wanted_shows.get(i).getContent().split("::");
+                int min_price = Integer.parseInt(content[2]);
+
+                if (remainder_budget >= min_price) {
+                    remainder_budget -= min_price;
+                    wanted_shows.get(i).setContent(Integer.toString(min_price));
+                }
+                else {
+                    wanted_shows.get(i).setContent("0");
+                }
+                show_proposals.add(wanted_shows.get(i));
+            }
         }
 
         private void calculateBestShows(ArrayList<ACLMessage> shows) {
@@ -296,6 +384,20 @@ public class Spectator extends Agent {
             switch(behaviour) {
                 case MOSTBANDS:
                     sortShowsByLowestPrice(shows);
+
+                case MOSTPRESTIGE:
+                    sortShowsByPrestige(shows);
+                    break;
+
+                case LEASTCOST:
+                    //sortShowsByCost(shows);
+                    break;
+
+                case LEASTDISTANCE:
+                    sortShowsByDistance(shows);
+                    break;
+
+                default:
                     break;
             }
         }
@@ -306,6 +408,8 @@ public class Spectator extends Agent {
                 for (int j = 0; j < n-i-1; j++) {
                     String[] content1 = shows.get(j).getContent().split("::");
                     String[] content2 = shows.get(j+1).getContent().split("::");
+                    int location1 = Integer.parseInt(content1[1]);
+                    int location2 = Integer.parseInt(content2[1]);
                     int ticket_price1 = Integer.parseInt(content1[3]);
                     int ticket_price2 = Integer.parseInt(content2[3]);
 
@@ -315,9 +419,75 @@ public class Spectator extends Agent {
                         shows.set(j, shows.get(j+1));
                         shows.set(j+1, temp);
                     }
+                    else if (ticket_price1 == ticket_price2)
+                    {
+                        if (Math.abs(location-location1) > Math.abs(location-location2)) {
+                            ACLMessage temp = shows.get(j);
+                            shows.set(j, shows.get(j + 1));
+                            shows.set(j + 1, temp);
+                        }
+                    }
                 }
         }
+
+
+        private void sortShowsByPrestige(ArrayList<ACLMessage> shows){
+            int n = shows.size();
+            for (int i = 0; i < n-1; i++)
+                for (int j = 0; j < n-i-1; j++) {
+                    String[] content1 = shows.get(j).getContent().split("::");
+                    String[] content2 = shows.get(j+1).getContent().split("::");
+                    int prestige1 = Integer.parseInt(content1[4]);
+                    int prestige2 = Integer.parseInt(content2[4]);
+                    int ticket_price1 = Integer.parseInt(content1[3]);
+                    int ticket_price2 = Integer.parseInt(content2[3]);
+
+                    if (prestige1 > prestige2)
+                    {
+                        ACLMessage temp = shows.get(j);
+                        shows.set(j, shows.get(j+1));
+                        shows.set(j+1, temp);
+                    }
+                    else if (prestige1 == prestige2)
+                    {
+                        if (ticket_price2 > ticket_price1) {
+                            ACLMessage temp = shows.get(j);
+                            shows.set(j, shows.get(j + 1));
+                            shows.set(j + 1, temp);
+                        }
+                    }
+                }
+        }
+
+        private void sortShowsByDistance(ArrayList<ACLMessage> shows){
+            int n = shows.size();
+            for (int i = 0; i < n-1; i++)
+                for (int j = 0; j < n-i-1; j++) {
+                    String[] content1 = shows.get(j).getContent().split("::");
+                    String[] content2 = shows.get(j+1).getContent().split("::");
+                    int show_location1 = Integer.parseInt(content1[1]);
+                    int show_location2 = Integer.parseInt(content2[1]);
+
+                    int ticket_price1 = Integer.parseInt(content1[3]);
+                    int ticket_price2 = Integer.parseInt(content2[3]);
+
+                    if ( (location - show_location2) > (location - show_location1) )
+                    {
+                        ACLMessage temp = shows.get(j);
+                        shows.set(j, shows.get(j+1));
+                        shows.set(j+1, temp);
+                    }
+                    else if ( (location - show_location1) == (location - show_location2) )
+                    {
+                        if (ticket_price2 > ticket_price1) {
+                            ACLMessage temp = shows.get(j);
+                            shows.set(j, shows.get(j + 1));
+                            shows.set(j + 1, temp);
+                        }
+                    }
+                }
+        }
+
+
     }
-
 }
-

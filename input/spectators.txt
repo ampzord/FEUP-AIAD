@@ -1,2 +1,4 @@
 Template : budget(>0); min_genre_spectrum(1-100); max_genre_spectrum(1-100); location(1-5); SPEC_BEHAVIOUR(MOSTBANDS, MOSTPRESTIGE, LEASTDISTANCE, LEASTCOST)
 Tone;200;1;100;3;MOSTBANDS
+Joaquim Alberto Malaquias;300;3;45;4;LEASTDISTANCE
+Socialao;420;4;69;4;MOSTPRESTIGE

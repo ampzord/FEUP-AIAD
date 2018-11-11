@@ -1,5 +1,8 @@
 Template : name; genre(0-99); prestige(1-5); min_price(>0); min_attendance(>0)
 Rise Against;90;5;80000;1
+Foo Fighters;88;5;70000;1
+Beethoven;15;5;60000;1
+Quim Barreiros;40;4;30000;1
 In Flames;90;5;20000;1
 Babushka;90;4;10000;1
 Muse;90;4;30000;1

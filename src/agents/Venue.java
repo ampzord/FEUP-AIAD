@@ -297,7 +297,7 @@ public class Venue extends Agent {
                 if(Utils.DEBUG)
                     System.out.println("VENUE: " + getLocalName() + " current budget = " + budget);
 
-                if (min_price < budget)
+                if (min_price <= budget)
                     possible_bands.add(inform);
 
                 requests_done++;
@@ -837,7 +837,6 @@ public class Venue extends Agent {
 
             return reply;
         }
-
 
         protected void handleRejectProposal(ACLMessage cfp, ACLMessage propose, ACLMessage reject) {
             System.out.println("handleRejectProposal");

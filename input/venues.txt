@@ -1,3 +1,4 @@
 Template : name;capacity(>0; 1 means 1000); budget(>0); min_genre_spectrum(0-99); max_genre_spectrum(0-99); min_acceptable_prestige(1-5); max_acceptable_prestige(1-5); location(1-5); behaviour(MOSTPRESTIGE, MOSTBANDS, MOSTPROFIT)
-Casa da Musica;1;100000;75;99;3;5;2;MOSTPRESTIGE
-Outro Sitio;1;90000;75;99;3;5;2;MOSTPRESTIGE
+Casa da Musica;3;100000;75;99;3;5;1;MOSTPRESTIGE
+Outro Sitio;2;90000;10;60;3;5;2;MOSTPRESTIGE
+Cave 45;1;50000;40;80;2;4;3;MOSTBANDS
