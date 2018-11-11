@@ -213,7 +213,6 @@ public class Utils {
         }
     }
 
-    //TODO check if the decided spectator behaviours match
     private static boolean isValidSpectatorBehaviour(String behaviour) {
         if (behaviour.equals("LEASTCOST") || behaviour.equals("LEASTDISTANCE") || behaviour.equals("MOSTBANDS") || behaviour.equals("MOSTPRESTIGE"))
             return true;

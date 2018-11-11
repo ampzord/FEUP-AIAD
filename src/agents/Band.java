@@ -253,8 +253,8 @@ public class Band extends Agent {
                     m.setOntology("Confirming_Presence");
                     m.addReceiver(new AID(proposals.get(i).getKey(), false));
 
-                    if (Utils.DEBUG)
-                        System.out.println("BAND: " + getLocalName() + " vvv Confirming_Presence vvv @ " + proposals.get(i).getKey() + " for " + proposals.get(i).getValue() + "$");
+
+                    System.out.println("BAND: " + getLocalName() + " Confirming_Presence @ " + proposals.get(i).getKey() + " for " + proposals.get(i).getValue() + "$");
                     String content = getLocalName() + "::" + proposals.get(i).getValue() + "::" + prestige + "::" + genre;
 
                     m.setContent(content);

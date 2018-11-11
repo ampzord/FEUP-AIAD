@@ -93,7 +93,7 @@ public class Spectator extends Agent {
 
     public void setup() {
         setSpectatorInformation();
-        printSpectatorInformation();
+        //printSpectatorInformation();
         searchVenues();
         startBehaviours();
     }
@@ -295,9 +295,7 @@ public class Spectator extends Agent {
             if (ticket_price <= budget) {
                 budget -= ticket_price;
                 ticket_shows_bought.add(inform.getContent());
-
-
-                System.out.println("Spectator " + getLocalName() + " is going to " + tokens[0] + " to watch " + tokens[2]);
+                System.out.println("\nSpectator: " + getLocalName() + " is going to Venue: " + tokens[0] + " to watch Band: " + tokens[2]);
             }
 
             if (!queue.isEmpty()) {
@@ -357,18 +355,6 @@ public class Spectator extends Agent {
                 }
         }
 
-        @Override
-        public int onEnd(){
-            System.out.println("ENTREI PUTAS");
-            if (!queue.isEmpty()) {
-                try {
-                    queue.poll().start();
-                } catch (StaleProxyException e) {
-                    e.printStackTrace();
-                }
-            }
-            return 0;
-        }
     }
 }
 
