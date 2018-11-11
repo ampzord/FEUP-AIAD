@@ -413,8 +413,15 @@ public class Venue extends Agent {
 
         //TODO
         private void getMostProfitBehaviour() {
+
             ArrayList<ACLMessage> ordered_possible_bands = possible_bands;
+
+            /*for (ACLMessage band : possible_bands)
+                System.out.println(band.getContent());*/
+
             sortBands(ordered_possible_bands);
+            calculateBestBands(ordered_possible_bands);
+
         }
 
         private void getMostPrestigeBehaviour() {
@@ -456,12 +463,7 @@ public class Venue extends Agent {
 
         }
 
-        //TODO MostProfitBehaviour
-        //TODO check if bands ordered by profict are in the correct order before final calculations
         private void calculateBestBandsMostProfitBehaviour(ArrayList<ACLMessage> possible_bands) {
-
-            sortBandsbyMostProfit(possible_bands);
-
             int remainder_budget = budget;
             for (int i = 0; i < possible_bands.size(); i++) {
                 String[] content = possible_bands.get(i).getContent().split("::");
@@ -531,7 +533,7 @@ public class Venue extends Agent {
                     sortBandsByLowestPrice(bands);
                     break;
                 case MOSTPROFIT:
-                    sortBandsbyMostProfit(bands);
+                    sortBandsByMostProfit(bands);
                     break;
                 case MOSTPRESTIGE:
                     sortBandsByMostPrestige(bands);
@@ -568,8 +570,7 @@ public class Venue extends Agent {
                 }
         }
 
-        //TODO MostProfitSort
-        private void sortBandsbyMostProfit(ArrayList<ACLMessage> ordered_possible_bands) {
+        private void sortBandsByMostProfit(ArrayList<ACLMessage> ordered_possible_bands) {
 
             int n = ordered_possible_bands.size();
             for (int i = 0; i < n-1; i++)
@@ -580,7 +581,7 @@ public class Venue extends Agent {
 
                     if (profit1 < profit2)
                     {
-                        ACLMessage temp = ordered_possible_bands.get(j).getValue();
+                        ACLMessage temp = ordered_possible_bands.get(j);
                         ordered_possible_bands.set(j, ordered_possible_bands.get(j+1));
                         ordered_possible_bands.set(j+1, temp);
                     }
