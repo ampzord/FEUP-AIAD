@@ -321,7 +321,7 @@ public class Spectator extends Agent {
                         int venue_location = Integer.valueOf(show[0]);
 
                         for (int j = 1; j < show.length; j++) {
-                            ACLMessage temp = msg;
+                            ACLMessage temp = msg.shallowClone();
                             String[] show_information = show[j].split("::");
 
                             /*String band_name = show_information[0];
@@ -347,7 +347,7 @@ public class Spectator extends Agent {
             }
 
             for(ACLMessage asd : wanted_shows) {
-                System.out.println("Wanted shows by : " + getLocalName() + " - " + asd.getContent().toString());
+                System.out.println("Wanted shows by : " + getLocalName() + " - " + asd.getContent());
             }
         }
 
