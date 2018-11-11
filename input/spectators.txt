@@ -1,4 +1,4 @@
-Template : budget(>0); min_genre_spectrum(1-100); max_genre_spectrum(1-100); location(1-5)
+Template : budget(>0); min_genre_spectrum(1-100); max_genre_spectrum(1-100); location(1-5); SPEC_BEHAVIOUR(MOSTBANDS, MOSTPRESTIGE, LEASTDISTANCE, LEASTCOST)
 50;30;70;3;MOSTBANDS
 100;10;30;5;MOSTPRESTIGE
 200;45;65;2;LEASTDISTANCE

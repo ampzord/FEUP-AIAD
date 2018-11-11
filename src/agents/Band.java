@@ -13,7 +13,6 @@ import jade.proto.AchieveREResponder;
 import utils.Utils;
 import java.util.ArrayList;
 import java.util.Vector;
-
 import javafx.util.Pair;
 
 public class Band extends Agent {
@@ -26,10 +25,9 @@ public class Band extends Agent {
     private ArrayList<Pair<String, Integer>> all_proposals;
     private int business_cards_handed;
 
-
     @Override
     public String toString() {
-        return String.format("Band - %1$-15s", this.getAID().getLocalName())
+        return String.format("Band - %1$-17s", this.getAID().getLocalName())
             + String.format(" Genre=%s, Prestige=%s, Min Price=%s, Min Attendance=%s",
                 this.genre, this.prestige, this.min_price, this.min_attendance);
     }
@@ -67,11 +65,9 @@ public class Band extends Agent {
 
     public void setup() {
         setBandInformation();
-        if(Utils.DEBUG)
-            printBandInformation();
+        printBandInformation();
         registerToDFService();
-
-        addBehaviour(new RequestResponder(this, MessageTemplate.MatchPerformative(ACLMessage.REQUEST)));
+        addBehaviour(new VenueRequestResponder(this, MessageTemplate.MatchPerformative(ACLMessage.REQUEST)));
     }
 
     private void setBandInformation() {
@@ -118,23 +114,23 @@ public class Band extends Agent {
     }
 
     /**
-     *  Venue request responder
+     *  Handles the requests of Venue
      */
-    class RequestResponder extends AchieveREResponder {
+    class VenueRequestResponder extends AchieveREResponder {
 
-        public RequestResponder(Agent a, MessageTemplate mt) {
+        public VenueRequestResponder(Agent a, MessageTemplate mt) {
             super(a, mt);
         }
 
         protected ACLMessage handleRequest(ACLMessage request) throws RefuseException {
             if(Utils.DEBUG)
-                System.out.println("BAND: " + getLocalName() + " [RequestResponder] received " + request.getOntology() + " from " + request.getSender().getLocalName());
+                System.out.println("BAND: " + getLocalName() + " [VenueRequestResponder] received " + request.getOntology() + " from " + request.getSender().getLocalName());
             ACLMessage reply = request.createReply();
 
             switch (request.getOntology()) {
                 case "Give_BusinessCard":
                     if(Utils.DEBUG)
-                        System.out.println("BAND: " + getLocalName() + " [RequestResponder] Giving Business Card to " + request.getSender().getLocalName());
+                        System.out.println("BAND: " + getLocalName() + " [VenueRequestResponder] Giving Business Card to " + request.getSender().getLocalName());
 
                     String[] tokens = request.getContent().split("::");
                     int attendance = Integer.parseInt(tokens[0]);
@@ -170,12 +166,6 @@ public class Band extends Agent {
             return reply;
         }
 
-        private boolean evaluateAcceptance(int attendance, int min_genre_spectrum, int max_genre_spectrum) {
-            if (attendance >= min_attendance && min_genre_spectrum <= genre && genre <= max_genre_spectrum)
-                return true;
-            return false;
-        }
-
         protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) {
             ACLMessage result = request.createReply();
 
@@ -207,6 +197,12 @@ public class Band extends Agent {
             return result;
         }
 
+        private boolean evaluateAcceptance(int attendance, int min_genre_spectrum, int max_genre_spectrum) {
+            if (attendance >= min_attendance && min_genre_spectrum <= genre && genre <= max_genre_spectrum)
+                return true;
+            return false;
+        }
+
         private void decideWhereToPlay() {
             Pair<String, Integer> temp;
             for (int i = 0; i < all_proposals.size() - 1; i++) {
@@ -222,7 +218,7 @@ public class Band extends Agent {
 
         @Override
         public int onEnd() {
-            System.out.println("BAND FECHOU");
+            System.out.println("Band communication to Venue has ended!");
             return 0;
         }
     }
@@ -235,7 +231,6 @@ public class Band extends Agent {
         public ConfirmShow(Agent a, ACLMessage msg) {
             super(a, msg);
         }
-
 
         protected Vector<ACLMessage> prepareRequests(ACLMessage msg) {
             Vector<ACLMessage> v = new Vector<>();
@@ -270,12 +265,13 @@ public class Band extends Agent {
 
                     m.setContent("");
                 }
-
                 v.add(m);
             }
 
             return v;
         }
+
+        //TODO confirming shows to the venue - only prepareRequests answers back, no code needed for the rest of the handles ?
 
         protected void handleAgree(ACLMessage agree) {
 

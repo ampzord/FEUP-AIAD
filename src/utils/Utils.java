@@ -17,9 +17,6 @@ public class Utils {
 
     public final static boolean DEBUG = false;
 
-    public Utils() {
-    }
-
     public static void readFileBands(String filePath) throws IOException {
         String line;
         int aux = 0;
@@ -197,7 +194,8 @@ public class Utils {
     private static boolean validInputOfSpectators(String[] tokens) {
         if (isValidBudget(Integer.parseInt(tokens[0]))
                 && isValidGenre(Integer.parseInt(tokens[1]), Integer.parseInt(tokens[2]))
-                && isValidLocation(Integer.parseInt(tokens[3])))
+                && isValidLocation(Integer.parseInt(tokens[3]))
+                && isValidSpectatorBehaviour(tokens[4]))
             return true;
         else {
             System.out.println("Error parsing input - spectators.txt");
@@ -209,12 +207,20 @@ public class Utils {
         if (behaviour.equals("MOSTPROFIT") || behaviour.equals("MOSTPRESTIGE") || behaviour.equals("MOSTBANDS"))
             return true;
         else {
-            System.out.println("Error parsing input - Behaviour of value: " + behaviour);
+            System.out.println("Error parsing input - Venue Behaviour of value: " + behaviour);
             return false;
         }
-
     }
 
+    //TODO check if the decided spectator behaviours match
+    private static boolean isValidSpectatorBehaviour(String behaviour) {
+        if (behaviour.equals("LEASTCOST") || behaviour.equals("LEASTDISTANCE") || behaviour.equals("MOSTBANDS") || behaviour.equals("MOSTPRESTIGE"))
+            return true;
+        else {
+            System.out.println("Error parsing input - Spectator Behaviour of value: " + behaviour);
+            return false;
+        }
+    }
 
     private static boolean isValidLocation(int location) {
         if (location >=1 && location <= 5)
