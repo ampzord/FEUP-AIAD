@@ -163,7 +163,7 @@ public class Band extends Agent {
 
         protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) {
             ACLMessage result = request.createReply();
-            System.out.println("BAND: " + getLocalName() + " ----- " + business_cards_handed + " must be == to proposals.size");
+            //System.out.println("BAND: " + getLocalName() + " ----- " + business_cards_handed + " must be == to proposals.size");
 
             switch (request.getOntology()) {
                 case "Give_BusinessCard":
@@ -278,7 +278,7 @@ public class Band extends Agent {
                 v.add(m);
             }
 
-            System.out.println("BAND: " + getLocalName() + " got " + proposals.size() + " replying to " + v.size());
+            //System.out.println("BAND: " + getLocalName() + " got " + proposals.size() + " replying to " + v.size());
 
             return v;
         }
@@ -301,7 +301,7 @@ public class Band extends Agent {
 
         @Override
         public int onEnd() {
-            System.out.println("BAND: " + getLocalName() + " finished informing all venues. Ending...");
+            //System.out.println("BAND: " + getLocalName() + " finished informing all venues. Ending...");
             myAgent.removeBehaviour(this);
             return 0;
         }

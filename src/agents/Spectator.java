@@ -206,7 +206,7 @@ public class Spectator extends Agent {
         }
 
         protected void handleAllResponses(Vector responses, Vector acceptances) {
-            System.out.println("\n" + getLocalName() + " got " + responses.size() + " responses!");
+            //System.out.println("\n" + getLocalName() + " got " + responses.size() + " responses!");
 
             for (int i = 0; i < responses.size(); i++) {
                 ACLMessage msg = ((ACLMessage) responses.get(i));
