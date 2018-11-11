@@ -73,11 +73,16 @@ public class JADELauncher {
 		try {
 			Utils.readFileSpectators(Utils.PATH_SPECTATORS);
 
-			for (int i = 0; i < Utils.spectatorsInformation.size(); i++) {
-				String spectatorName = "Spectator" + ++i;
-				ac4 = spectators.createNewAgent(spectatorName, "agents.Spectator", Utils.spectatorsInformation.get(i));
+			for (Object[] spectator : Utils.spectatorsInformation) {
+				ac4 = spectators.createNewAgent((String) spectator[0], "agents.Spectator", spectator);
 				ac4.start();
 			}
+			/*
+			for (int i = 1; i <= Utils.spectatorsInformation.size(); i++) {
+				String spectatorName = "Spectator" + i;
+				ac4 = spectators.createNewAgent(spectatorName, "agents.Spectator", Utils.spectatorsInformation.get(i));
+				ac4.start();
+			}*/
 			System.out.println("\n--- Spectators ---\n");
 
 		} catch (StaleProxyException e) {

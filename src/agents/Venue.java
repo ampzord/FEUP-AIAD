@@ -110,6 +110,7 @@ public class Venue extends Agent {
         registerToDFService();
         searchBands();
         startBehaviours();
+        addBehaviour(new ReceiveTicketRequest(this, MessageTemplate.MatchPerformative(ACLMessage.CFP)));
     }
 
     private void startBehaviours() {
@@ -333,7 +334,7 @@ public class Venue extends Agent {
                 //System.out.println("VENUE: " + getLocalName() + " has " + shows.size() + " shows.");
 
                 line_up_ready = true;
-                addBehaviour(new ReceiveTicketRequest(myAgent, MessageTemplate.MatchPerformative(ACLMessage.CFP)));
+                //addBehaviour(new ReceiveTicketRequest(myAgent, MessageTemplate.MatchPerformative(ACLMessage.CFP)));
             }
 
             System.out.println("VENUE: finished STEP 1 by " + getLocalName() + " @ [GetInterestingBands]");
@@ -806,7 +807,7 @@ public class Venue extends Agent {
 
             ACLMessage reply = cfp.createReply();
 
-            System.out.println("Entered handleCfp1");
+            //System.out.println("Entered handleCfp1");
 
             if (line_up_ready) {
                 System.out.println("Lineup is ready!");
@@ -818,7 +819,7 @@ public class Venue extends Agent {
                     message += "//" + show.get(0) + "::" + show.get(1) + "::" + show.get(2) + "::" + show.get(3);
                 }
                 reply.setContent(message);
-                System.out.println("VENUE: " + getLocalName() + " [ReceiveTicketRequest] sends " + message);
+                //System.out.println("VENUE: " + getLocalName() + " [ReceiveTicketRequest] sends " + message);
             }
             else {
                 reply.setPerformative(ACLMessage.REFUSE);
