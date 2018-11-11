@@ -297,7 +297,7 @@ public class Venue extends Agent {
                 if(Utils.DEBUG)
                     System.out.println("VENUE: " + getLocalName() + " current budget = " + budget);
 
-                if (min_price < budget)
+                if (min_price <= budget)
                     possible_bands.add(inform);
 
                 requests_done++;
@@ -735,6 +735,7 @@ public class Venue extends Agent {
                         show.add(getTicketPrice(prestige));
                         show.add(prestige);
                         show.add(genre);
+                        show.add(capacity);
 
                         shows.add(show);
                         budget = budget - hiring_price;
@@ -821,7 +822,8 @@ public class Venue extends Agent {
 
                 message += location;
                 for (ArrayList<Object> show : shows) {
-                    message += "//" + show.get(0) + "::" + show.get(1) + "::" + show.get(2) + "::" + show.get(3);
+                    if ((Integer) show.get(4) > 0)
+                        message += "//" + show.get(0) + "::" + show.get(1) + "::" + show.get(2) + "::" + show.get(3);
                 }
                 reply.setContent(message);
                 //System.out.println("VENUE: " + getLocalName() + " [ReceiveTicketRequest] sends " + message);
@@ -835,7 +837,6 @@ public class Venue extends Agent {
 
             return reply;
         }
-
 
         protected void handleRejectProposal(ACLMessage cfp, ACLMessage propose, ACLMessage reject) {
             System.out.println("handleRejectProposal");

@@ -2,9 +2,7 @@ package agents;
 import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
-import jade.lang.acl.UnreadableException;
 import jade.proto.ContractNetInitiator;
-import javafx.util.Pair;
 import utils.Utils;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.DFService;
@@ -29,7 +27,7 @@ public class Spectator extends Agent {
     private ArrayList<ACLMessage> wanted_shows;
     private DFAgentDescription[] existent_venues;
     private SpectatorBehaviour behaviour;
-    private Behaviour viewMostBands;
+    private Behaviour init_negotiations;
     private int venue_has_shows;
 
     @Override
@@ -37,47 +35,36 @@ public class Spectator extends Agent {
         return String.format("Spectator - %s, Budget=%4s, Min Genre Spectrum=%s, Max Genre Spectrum=%s, Location=%s,Behaviour=%s",
                 this.getLocalName(), this.budget, this.min_genre_spectrum, this.max_genre_spectrum, this.location, this.behaviour);
     }
-
     public int getBudget() {
         return budget;
     }
-
     public void setBudget(int budget) {
         this.budget = budget;
     }
-
     public int getMin_genre_spectrum() {
         return min_genre_spectrum;
     }
-
     public void setMin_genre_spectrum(int min_genre_spectrum) {
         this.min_genre_spectrum = min_genre_spectrum;
     }
-
     public int getMax_genre_spectrum() {
         return max_genre_spectrum;
     }
-
     public void setMax_genre_spectrum(int max_genre_spectrum) {
         this.max_genre_spectrum = max_genre_spectrum;
     }
-
     public int getLocation() {
         return location;
     }
-
     public void setLocation(int location) {
         this.location = location;
     }
-
     public DFAgentDescription[] getExistent_venues() {
         return existent_venues;
     }
-
     public void setExistent_venues(DFAgentDescription[] existent_venues) {
         this.existent_venues = existent_venues;
     }
-
     private void setBehaviour(String name) {
         switch (name) {
             case "MOSTBANDS":
@@ -102,18 +89,16 @@ public class Spectator extends Agent {
         printSpectatorInformation();
         searchVenues();
         startBehaviours();
-        //addBehaviour(new InitiateNegotiationWithVenue(this, new ACLMessage(ACLMessage.CFP)));
     }
 
     private void startBehaviours() {
-        viewMostBands = new InitiateNegotiationWithVenue(this, new ACLMessage(ACLMessage.CFP));
-        addBehaviour(viewMostBands);
+        init_negotiations = new InitiateNegotiationWithVenue(this, new ACLMessage(ACLMessage.CFP));
+        addBehaviour(init_negotiations);
     }
 
     private void retry() {
-        //System.out.println("SPECTATOR: " + getLocalName() + " retrying...");
-        viewMostBands.block();
-        removeBehaviour(viewMostBands);
+        init_negotiations.block();
+        removeBehaviour(init_negotiations);
         startBehaviours();
     }
 
@@ -179,15 +164,6 @@ public class Spectator extends Agent {
         @Override
         public void action() {
 
-            switch (behaviour) {
-                case MOSTBANDS:
-                    System.out.println("Starting mostBands Spectator Behaviour");
-                    getMostBandsBehaviour();
-                    break;
-
-                default:
-                    break;
-            }
 
             flag = true;
         }
@@ -201,79 +177,6 @@ public class Spectator extends Agent {
         public int onEnd() {
             System.out.println("Entered SpectatorBehaviour onEnd()");
             return 0;
-        }
-
-        private void getMostBandsBehaviour() {
-            /*
-            ArrayList<ACLMessage> ordered_possible_bands = possible_bands;
-            sortBands(ordered_possible_bands);
-            Collections.reverse(ordered_possible_bands);
-            calculateBestBands(ordered_possible_bands);*/
-
-            ArrayList<ACLMessage> ordered_possible_bands = wanted_shows;
-
-            for (ACLMessage show : ordered_possible_bands)
-                System.out.println(show.getContent());
-
-            sortShows(ordered_possible_bands);
-
-            for (ACLMessage show : ordered_possible_bands)
-                System.out.println(show.getContent());
-
-            //calculateBestShows(ordered_possible_bands);
-        }
-
-        private void calculateBestShows(ArrayList<ACLMessage> shows) {
-            switch(behaviour) {
-                case MOSTBANDS:
-                    calculateMostBandsBehaviour(shows);
-                    break;
-            }
-        }
-
-        void calculateMostBandsBehaviour(ArrayList<ACLMessage> shows) {
-            /*int remainder_budget = budget;
-            for (int i = 0; i < possible_bands.size(); i++) {
-                String[] content = possible_bands.get(i).getContent().split("::");
-                int min_price = Integer.parseInt(content[2]);
-
-                if (remainder_budget >= min_price && isProfitable(possible_bands.get(i))) {
-                    remainder_budget -= min_price;
-                    possible_bands.get(i).setContent(Integer.toString(min_price));
-                } else {
-                    possible_bands.get(i).setContent("0");
-                }
-                venue_proposal.add(possible_bands.get(i));
-            }*/
-        }
-
-        private void sortShows(ArrayList<ACLMessage> shows) {
-            switch(behaviour) {
-                case MOSTBANDS:
-                    sortShowsByLowestPrice(shows);
-                    break;
-            }
-        }
-
-        private void sortShowsByLowestPrice(ArrayList<ACLMessage> shows) {
-            int n = shows.size();
-            for (int i = 0; i < n-1; i++)
-                for (int j = 0; j < n-i-1; j++) {
-                    String[] content1 = shows.get(j).getContent().split("::");
-                    String[] content2 = shows.get(j+1).getContent().split("::");
-                    int ticket_price1 = Integer.parseInt(content1[3]);
-                    int ticket_price2 = Integer.parseInt(content2[3]);
-
-                    int min_preco1 = Integer.parseInt(content1[2]);
-                    int min_preco2 = Integer.parseInt(content2[2]);
-
-                    if (ticket_price1 < ticket_price2)
-                    {
-                        ACLMessage temp = shows.get(j);
-                        shows.set(j, shows.get(j+1));
-                        shows.set(j+1, temp);
-                    }
-                }
         }
 
 
@@ -325,15 +228,15 @@ public class Spectator extends Agent {
                             String[] show_information = show[j].split("::");
 
                             /*String band_name = show_information[0];
-                            int ticket_price = Integer.valueOf(show_information[1]);
                             int prestige = Integer.valueOf(show_information[2]);*/
+                            int ticket_price = Integer.valueOf(show_information[1]);
                             int genre = Integer.valueOf(show_information[3]);
 
                             String message = venue_name + "::" + venue_location + "::"
                                     + show_information[0] + "::" + show_information[1] + "::"
                                     + show_information[2] + "::" + show_information[3];
 
-                            if (genre >= min_genre_spectrum && genre <= max_genre_spectrum) {
+                            if (genre >= min_genre_spectrum && genre <= max_genre_spectrum && ticket_price <= budget) {
                                 temp.setContent(message);
 
                                 System.out.println("OLA " + temp.getContent());
@@ -346,14 +249,111 @@ public class Spectator extends Agent {
 
             }
 
-            for(ACLMessage asd : wanted_shows) {
-                System.out.println("Wanted shows by : " + getLocalName() + " - " + asd.getContent());
+            if (wanted_shows.size() <= 0) {
+                System.out.println("SPECTATOR: " + getLocalName() + " no more shows available.");
+            } else {
+                for (ACLMessage asd : wanted_shows)
+                    System.out.println("Wanted shows by : " + getLocalName() + " - " + asd.getContent());
+
+                switch (behaviour) {
+                    case MOSTBANDS:
+                        System.out.println("Starting mostBands Spectator Behaviour");
+                        getMostBandsBehaviour();
+                        break;
+
+                    default:
+                        break;
+                }
             }
         }
 
         protected void handleAllResultNotifications(Vector resultNotifications) {
             if (Utils.DEBUG)
                 System.out.println("Spectator: " + getLocalName() + " got " + resultNotifications.size() + " result notifications!");
+        }
+
+        /* --- */
+
+        private void getMostBandsBehaviour() {
+            /*
+            ArrayList<ACLMessage> ordered_possible_bands = possible_bands;
+            sortBands(ordered_possible_bands);
+            Collections.reverse(ordered_possible_bands);
+            calculateBestBands(ordered_possible_bands);*/
+
+            ArrayList<ACLMessage> ordered_possible_bands = wanted_shows;
+
+            for (ACLMessage show : ordered_possible_bands)
+                System.out.println(show.getContent());
+
+            sortShows(ordered_possible_bands);
+
+            System.out.println("DEPOIS DE SORT");
+
+            for (ACLMessage show : ordered_possible_bands)
+                System.out.println(show.getContent());
+
+            //calculateBestShows(ordered_possible_bands);
+        }
+
+        private void calculateBestShows(ArrayList<ACLMessage> shows) {
+            switch(behaviour) {
+                case MOSTBANDS:
+                    calculateMostBandsBehaviour(shows);
+                    break;
+            }
+        }
+
+        void calculateMostBandsBehaviour(ArrayList<ACLMessage> shows) {
+            /*int remainder_budget = budget;
+            for (int i = 0; i < possible_bands.size(); i++) {
+                String[] content = possible_bands.get(i).getContent().split("::");
+                int min_price = Integer.parseInt(content[2]);
+
+                if (remainder_budget >= min_price && isProfitable(possible_bands.get(i))) {
+                    remainder_budget -= min_price;
+                    possible_bands.get(i).setContent(Integer.toString(min_price));
+                } else {
+                    possible_bands.get(i).setContent("0");
+                }
+                venue_proposal.add(possible_bands.get(i));
+            }*/
+        }
+
+        private void sortShows(ArrayList<ACLMessage> shows) {
+            switch(behaviour) {
+                case MOSTBANDS:
+                    sortShowsByLowestPrice(shows);
+                    break;
+            }
+        }
+
+        private void sortShowsByLowestPrice(ArrayList<ACLMessage> shows) {
+            int n = shows.size();
+            for (int i = 0; i < n-1; i++)
+                for (int j = 0; j < n-i-1; j++) {
+                    String[] content1 = shows.get(j).getContent().split("::");
+                    String[] content2 = shows.get(j+1).getContent().split("::");
+                    int location1 = Integer.parseInt(content1[1]);
+                    int location2 = Integer.parseInt(content2[1]);
+                    int ticket_price1 = Integer.parseInt(content1[3]);
+                    int ticket_price2 = Integer.parseInt(content2[3]);
+
+                    if (ticket_price1 > ticket_price2)
+                    {
+                        ACLMessage temp = shows.get(j);
+                        shows.set(j, shows.get(j+1));
+                        shows.set(j+1, temp);
+                    }
+                    else if (ticket_price1 == ticket_price2)
+                    {
+                        if (Math.abs(location-location1) > Math.abs(location-location2)) {
+                            ACLMessage temp = shows.get(j);
+                            shows.set(j, shows.get(j + 1));
+                            shows.set(j + 1, temp);
+                        }
+                    }
+                }
         }
     }
 }
