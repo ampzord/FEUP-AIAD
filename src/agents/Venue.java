@@ -15,6 +15,7 @@ import jade.lang.acl.MessageTemplate;
 import jade.proto.AchieveREInitiator;
 import jade.proto.AchieveREResponder;
 import jade.proto.ContractNetResponder;
+import javafx.util.Pair;
 import utils.Utils;
 
 public class Venue extends Agent {
@@ -452,7 +453,7 @@ public class Venue extends Agent {
         //TODO check if bands ordered by profict are in the correct order before final calculations
         private void calculateBestBandsMostProfitBehaviour(ArrayList<ACLMessage> possible_bands) {
             
-            ArrayList<Pair<Integer, ACLMessage> profit_per_band = new ArrayList<>();
+            ArrayList<Pair<Integer, ACLMessage>> profit_per_band = new ArrayList<>();
             
             for(int i = 0; i < possible_bands.size(); i++){
                 
@@ -581,12 +582,12 @@ public class Venue extends Agent {
             int n = ordered_possible_bands.size();
             for (int i = 0; i < n-1; i++)
                 for (int j = 0; j < n-i-1; j++) {
-                    String[] profit1 = ordered_possible_bands.get(j).getKey();
-                    String[] profit2 = ordered_possible_bands.get(j+1).getKey();
+                    int profit1 = ordered_possible_bands.get(j).getKey();
+                    int profit2 = ordered_possible_bands.get(j+1).getKey();
 
                     if (profit1 < profit2)
                     {
-                        ACLMessage temp = ordered_possible_bands.get(j);
+                        ACLMessage temp = ordered_possible_bands.get(j).getValue();
                         ordered_possible_bands.set(j, ordered_possible_bands.get(j+1));
                         ordered_possible_bands.set(j+1, temp);
                     }
