@@ -120,7 +120,6 @@ public class Venue extends Agent {
         registerToDFService();
         searchBands();
         startBehaviours();
-        addBehaviour(new ReceiveTicketRequest(this, MessageTemplate.MatchPerformative(ACLMessage.CFP)));
     }
 
     private void startBehaviours() {
@@ -132,16 +131,16 @@ public class Venue extends Agent {
 
     private void retry () {
         //System.out.println("VENUE: " + getLocalName() + " retrying...");
-/*
-        band_getter.block();
+
+        getInterestingBands.block();
         show_confirmations.block();
         hire_bands.block();
         request_contract.block();
-        removeBehaviour(band_getter);
+        removeBehaviour(getInterestingBands);
         removeBehaviour(show_confirmations);
         removeBehaviour(hire_bands);
         removeBehaviour(request_contract);
-*/
+
         startBehaviours();
     }
 
@@ -340,10 +339,12 @@ public class Venue extends Agent {
         public int onEnd() {
             if (possible_bands.size() == 0) {
 
-                //System.out.println("VENUE: " + getLocalName() + " - " + "No more bands available. Exiting...");
+                System.out.println("VENUE: " + getLocalName() + " - " + "No more bands available. Exiting...");
                 //System.out.println("VENUE: " + getLocalName() + " has " + shows.size() + " shows.");
 
                 line_up_ready = true;
+                addBehaviour(new ReceiveTicketRequest(myAgent, MessageTemplate.MatchPerformative(ACLMessage.CFP)));
+
             }
 
             removeBehaviour(this);
@@ -797,71 +798,39 @@ public class Venue extends Agent {
 
             ACLMessage reply = cfp.createReply();
 
+            System.out.println("Entered handleCfp1");
+
             if (line_up_ready) {
+                System.out.println("Lineup is ready!");
                 reply.setPerformative(ACLMessage.PROPOSE);
                 String message = "";
 
                 message += location;
                 for (ArrayList<Object> show : shows) {
-                    message += "//" + show.get(0) + "::" + shows.get(1) + "::" + shows.get(2) + "::" + shows.get(3);
+                    message += "//" + show.get(0) + "::" + show.get(1) + "::" + show.get(2) + "::" + show.get(3);
                 }
+                reply.setContent(message);
                 System.out.println("VENUE: " + getLocalName() + " [ReceiveTicketRequest] sends " + message);
             }
             else {
                 reply.setPerformative(ACLMessage.REFUSE);
-                reply.setContent("VENUE: [ReceiveTicketRequest] Venue not ready yet.");
+                reply.setContent("Venue not ready yet.");
                 if (Utils.DEBUG)
-                    System.out.println("Venue not ready yet");
+                    System.out.println("Venue " + getLocalName() + " not ready yet!");
             }
 
             return reply;
         }
 
-        /*
+
         protected void handleRejectProposal(ACLMessage cfp, ACLMessage propose, ACLMessage reject) {
-            System.out.println(myAgent.getLocalName() + " got a reject from " + reject.getSender().getLocalName());
-            business_cards_handed--;
+            System.out.println("handleRejectProposal");
         }
 
         protected ACLMessage handleAcceptProposal(ACLMessage cfp, ACLMessage propose, ACLMessage accept) {
-            System.out.println(myAgent.getLocalName() + " got an accept from " + accept.getSender().getLocalName());
-            ACLMessage result = accept.createReply();
-
-            String[] tokens = accept.getContent().split("::");
-            int price = Integer.parseInt(tokens[1]);
-
-            Pair<String, Integer> pair = new Pair<>(accept.getSender().getLocalName() , price);
-            all_proposals.add(pair);
-
-            //wait for all proposals
-            System.out.println(getAID().getLocalName() + " is waiting for " + business_cards_handed + " proposals, currently have " + all_proposals.size());
-            while (business_cards_handed != all_proposals.size()) {
-                System.out.println(getAID().getLocalName() + " is waiting for more proposals");
-                try {
-                    TimeUnit.SECONDS.sleep(3);
-                } catch (Exception e) {
-                    System.out.println("band waiter is kaput");
-                }
-            }
-
-            int max = min_price;
-            int max_pos = 0;
-            for (int i=0; i<all_proposals.size(); i++) {
-                if (all_proposals.get(i).getValue() > max) {
-                    max = all_proposals.get(i).getValue();
-                    max_pos = i;
-                }
-            }
-
-            if (accept.getSender().getLocalName().equals(all_proposals.get(max_pos).getKey())) {
-                result.setPerformative(ACLMessage.INFORM);
-                result.setContent("Gib moneys");
-            } else {
-                result.setPerformative(ACLMessage.FAILURE);
-            }
-
-            return result;
-        }*/
+            System.out.println("handleAcceptProposal");
+            return accept;
+        }
 
     }
 }

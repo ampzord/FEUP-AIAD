@@ -164,13 +164,15 @@ public class Spectator extends Agent {
                 switch (msg.getPerformative()) {
 
                     case ACLMessage.REFUSE:
-                        if (Utils.DEBUG) {
-                            System.out.println("SPECTATOR: " + getLocalName() + " got refuse from " + msg.getSender().getLocalName());
-                            System.out.println("SPECTATOR: Restarting.");
-                        }
+                        System.out.println("handleAllResponses - refuse");
+                        //System.out.println("SPECTATOR: " + getLocalName() + " got refuse from " + msg.getSender().getLocalName());
+                        //System.out.println("SPECTATOR: Restarting.");
+
                         break;
 
                     case ACLMessage.PROPOSE:
+                        System.out.println("handleAllResponses - accept");
+
                         break;
                         /*
                         String[] show = msg.getContent().split("//");
