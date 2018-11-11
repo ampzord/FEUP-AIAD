@@ -271,10 +271,12 @@ public class Spectator extends Agent {
 
                     case LEASTCOST:
                         System.out.println("Starting leastCost Spectator Behaviour");
+                        //TODO - duvida: isnt this shit the same as getMostBandsBehaviour()?
                         break;
 
                     case LEASTDISTANCE:
                         System.out.println("Starting leastDistance Spectator Behaviour");
+                        getLeastDistanceBehaviour();
                         break;
 
                     default:
@@ -314,13 +316,29 @@ public class Spectator extends Agent {
 
 
         private void getMostPrestigeBehaviour() {
-            ArrayList<ACLMessage> wanted_shows = wanted_shows;
-
-            for(ACLMessage show : wanted_shows)
-                System.out.println(show.getContent());
 
             sortShows(wanted_shows);
             Collections.reverse(wanted_shows);
+
+            int remainder_budget = budget;
+            for (int i = 0; i < wanted_shows.size(); i++) {
+                String[] content = wanted_shows.get(i).getContent().split("::");
+                int min_price = Integer.parseInt(content[2]);
+
+                if (remainder_budget >= min_price) {
+                    remainder_budget -= min_price;
+                    wanted_shows.get(i).setContent(Integer.toString(min_price));
+                }
+                else {
+                    wanted_shows.get(i).setContent("0");
+                }
+                show_proposals.add(wanted_shows.get(i));
+            }
+        }
+
+        private void getLeastDistanceBehaviour() {
+
+            sortShows(wanted_shows);
 
             int remainder_budget = budget;
             for (int i = 0; i < wanted_shows.size(); i++) {
@@ -376,7 +394,7 @@ public class Spectator extends Agent {
                     break;
 
                 case LEASTDISTANCE:
-                    //sortShowsByDistance(shows);
+                    sortShowsByDistance(shows);
                     break;
 
                 default:
@@ -419,8 +437,8 @@ public class Spectator extends Agent {
                 for (int j = 0; j < n-i-1; j++) {
                     String[] content1 = shows.get(j).getContent().split("::");
                     String[] content2 = shows.get(j+1).getContent().split("::");
-                    int prestige1 = Integer.parseInt(content1[2]);
-                    int prestige2 = Integer.parseInt(content2[2]);
+                    int prestige1 = Integer.parseInt(content1[4]);
+                    int prestige2 = Integer.parseInt(content2[4]);
                     int ticket_price1 = Integer.parseInt(content1[3]);
                     int ticket_price2 = Integer.parseInt(content2[3]);
 
@@ -440,6 +458,48 @@ public class Spectator extends Agent {
                     }
                 }
         }
+
+        private void sortShowsByDistance(ArrayList<ACLMessage> shows){
+            int n = shows.size();
+            for (int i = 0; i < n-1; i++)
+                for (int j = 0; j < n-i-1; j++) {
+                    String[] content1 = shows.get(j).getContent().split("::");
+                    String[] content2 = shows.get(j+1).getContent().split("::");
+                    int show_location1 = Integer.parseInt(content1[1]);
+                    int show_location2 = Integer.parseInt(content2[1]);
+
+                    int ticket_price1 = Integer.parseInt(content1[3]);
+                    int ticket_price2 = Integer.parseInt(content2[3]);
+
+                    if ( (location - show_location2) > (location - show_location1) )
+                    {
+                        ACLMessage temp = shows.get(j);
+                        shows.set(j, shows.get(j+1));
+                        shows.set(j+1, temp);
+                    }
+                    else if (location - show_location1 == (location - show_location2)
+                    {
+                        if (ticket_price2 > ticket_price1) {
+                            ACLMessage temp = shows.get(j);
+                            shows.set(j, shows.get(j + 1));
+                            shows.set(j + 1, temp);
+                        }
+                    }
+                }
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
     }
 }
 
