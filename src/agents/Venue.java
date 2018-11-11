@@ -23,22 +23,12 @@ public class Venue extends Agent {
         MOSTBANDS, MOSTPRESTIGE, MOSTPROFIT;
     }
 
-    private int capacity;
-    private int budget;
-    private int min_genre_spectrum;
-    private int max_genre_spectrum;
-    private int min_acceptable_prestige;
-    private int max_acceptable_prestige;
+    private int capacity, budget, min_genre_spectrum, max_genre_spectrum, min_acceptable_prestige, max_acceptable_prestige, location, requests_done, band_responses;
     private DFAgentDescription[] existent_bands;
-    private ArrayList<ACLMessage> possible_bands;
-    private ArrayList<ACLMessage> venue_proposal;
+    private ArrayList<ACLMessage> possible_bands, venue_proposal;
     private ArrayList<ArrayList<Object>> shows;
-    private int location;
-    private int requests_done;
-    private int band_responses;
     private VenueBehaviour behaviour;
-    private boolean received_refusal;
-    private boolean line_up_ready;
+    private boolean received_refusal, line_up_ready;
     private Behaviour getInterestingBands, show_confirmations, hire_bands, request_contract;
 
     @Override
