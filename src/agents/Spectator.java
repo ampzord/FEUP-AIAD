@@ -29,7 +29,7 @@ public class Spectator extends Agent {
     private ArrayList<ACLMessage> wanted_shows;
     private DFAgentDescription[] existent_venues;
     private SpectatorBehaviour behaviour;
-    private Behaviour viewMostBands;
+    private Behaviour init_negotiation;
     private int venue_has_shows;
 
     @Override
@@ -41,43 +41,33 @@ public class Spectator extends Agent {
     public int getBudget() {
         return budget;
     }
-
     public void setBudget(int budget) {
         this.budget = budget;
     }
-
     public int getMin_genre_spectrum() {
         return min_genre_spectrum;
     }
-
     public void setMin_genre_spectrum(int min_genre_spectrum) {
         this.min_genre_spectrum = min_genre_spectrum;
     }
-
     public int getMax_genre_spectrum() {
         return max_genre_spectrum;
     }
-
     public void setMax_genre_spectrum(int max_genre_spectrum) {
         this.max_genre_spectrum = max_genre_spectrum;
     }
-
     public int getLocation() {
         return location;
     }
-
     public void setLocation(int location) {
         this.location = location;
     }
-
     public DFAgentDescription[] getExistent_venues() {
         return existent_venues;
     }
-
     public void setExistent_venues(DFAgentDescription[] existent_venues) {
         this.existent_venues = existent_venues;
     }
-
     private void setBehaviour(String name) {
         switch (name) {
             case "MOSTBANDS":
@@ -102,18 +92,17 @@ public class Spectator extends Agent {
         printSpectatorInformation();
         searchVenues();
         startBehaviours();
-        //addBehaviour(new InitiateNegotiationWithVenue(this, new ACLMessage(ACLMessage.CFP)));
     }
 
     private void startBehaviours() {
-        viewMostBands = new InitiateNegotiationWithVenue(this, new ACLMessage(ACLMessage.CFP));
-        addBehaviour(viewMostBands);
+        init_negotiation = new InitiateNegotiationWithVenue(this, new ACLMessage(ACLMessage.CFP));
+        addBehaviour(init_negotiation);
     }
 
     private void retry() {
         //System.out.println("SPECTATOR: " + getLocalName() + " retrying...");
-        viewMostBands.block();
-        removeBehaviour(viewMostBands);
+        init_negotiation.block();
+        removeBehaviour(init_negotiation);
         startBehaviours();
     }
 
@@ -164,21 +153,88 @@ public class Spectator extends Agent {
     }
 
     /**
-     * Holds the decision making of a spectator on the show to watch
+     * Start communication with Venue to decide which shows the spectator will view
      */
-    class ViewShow extends Behaviour {
+    class InitiateNegotiationWithVenue extends ContractNetInitiator {
 
-        Spectator spec;
-        boolean flag;
-
-        public ViewShow(Spectator spec) {
-            spec = spec;
-            flag = false;
+        public InitiateNegotiationWithVenue(Agent a, ACLMessage msg) {
+            super(a, msg);
         }
 
-        @Override
-        public void action() {
+        protected Vector prepareCfps(ACLMessage cfp) {
+            Vector v = new Vector();
+            System.out.println();
 
+            for (int i = 0; i < existent_venues.length; i++) {
+                cfp.addReceiver(new AID(existent_venues[i].getName().getLocalName(), false));
+                //System.out.println(getLocalName() + " - Sending Call For Proposal (CFP) to " + existent_venues[i].getName().getLocalName());
+            }
+            cfp.setContent(getLocalName() + " is the Venue ready?");
+            v.add(cfp);
+            return v;
+        }
+
+        protected void handleAllResponses(Vector responses, Vector acceptances) {
+            //System.out.println("\n" + getLocalName() + " got " + responses.size() + " responses!");
+
+            for (int i = 0; i < responses.size(); i++) {
+                ACLMessage msg = ((ACLMessage) responses.get(i));
+                switch (msg.getPerformative()) {
+                    case ACLMessage.REFUSE:
+                        //retry();
+                        break;
+                    case ACLMessage.PROPOSE:
+                        //venue_has_shows++;
+                        System.out.println("Spectator : " + getLocalName() + " has a proprosal from " + msg.getSender().getLocalName());
+                        System.out.println("MESSAGE: " + msg.getContent().toString());
+
+                        String[] show = msg.getContent().split("//");
+                        String venue_name = msg.getSender().getLocalName();
+                        int venue_location = Integer.valueOf(show[0]);
+
+                        for (int j = 1; j < show.length; j++) {
+                            ACLMessage temp = msg.shallowClone();
+                            String[] show_information = show[j].split("::");
+
+                            /*String band_name = show_information[0];
+                            int ticket_price = Integer.valueOf(show_information[1]);
+                            int prestige = Integer.valueOf(show_information[2]);*/
+                            int genre = Integer.valueOf(show_information[3]);
+
+                            String message = venue_name + "::" + venue_location + "::"
+                                    + show_information[0] + "::" + show_information[1] + "::"
+                                    + show_information[2] + "::" + show_information[3];
+
+                            if (genre >= min_genre_spectrum && genre <= max_genre_spectrum) {
+                                temp.setContent(message);
+
+                                System.out.println("OLA " + temp.getContent());
+                                wanted_shows.add(temp);
+                            }
+
+                        }
+                        break;
+                }
+
+            }
+
+            for(ACLMessage asd : wanted_shows) {
+                System.out.println("Wanted shows by : " + getLocalName() + " - " + asd.getContent());
+            }
+
+            handleBehaviours();
+
+
+        }
+
+        protected void handleAllResultNotifications(Vector resultNotifications) {
+            if (Utils.DEBUG)
+                System.out.println("Spectator: " + getLocalName() + " got " + resultNotifications.size() + " result notifications!");
+        }
+
+        /* ---- */
+
+        private void handleBehaviours() {
             switch (behaviour) {
                 case MOSTBANDS:
                     System.out.println("Starting mostBands Spectator Behaviour");
@@ -188,19 +244,6 @@ public class Spectator extends Agent {
                 default:
                     break;
             }
-
-            flag = true;
-        }
-
-        @Override
-        public boolean done() {
-            return flag;
-        }
-
-        @Override
-        public int onEnd() {
-            System.out.println("Entered SpectatorBehaviour onEnd()");
-            return 0;
         }
 
         private void getMostBandsBehaviour() {
@@ -209,11 +252,13 @@ public class Spectator extends Agent {
             sortBands(ordered_possible_bands);
             Collections.reverse(ordered_possible_bands);
             calculateBestBands(ordered_possible_bands);*/
-
+            System.out.println("ENTROU");
             ArrayList<ACLMessage> ordered_possible_bands = wanted_shows;
 
             for (ACLMessage show : ordered_possible_bands)
                 System.out.println(show.getContent());
+
+            System.out.println("DEPOIS");
 
             sortShows(ordered_possible_bands);
 
@@ -264,10 +309,7 @@ public class Spectator extends Agent {
                     int ticket_price1 = Integer.parseInt(content1[3]);
                     int ticket_price2 = Integer.parseInt(content2[3]);
 
-                    int min_preco1 = Integer.parseInt(content1[2]);
-                    int min_preco2 = Integer.parseInt(content2[2]);
-
-                    if (ticket_price1 < ticket_price2)
+                    if (ticket_price1 > ticket_price2)
                     {
                         ACLMessage temp = shows.get(j);
                         shows.set(j, shows.get(j+1));
@@ -275,86 +317,7 @@ public class Spectator extends Agent {
                     }
                 }
         }
-
-
     }
 
-    /**
-     * Start communication with Venue to decide which shows the spectator will view
-     */
-    class InitiateNegotiationWithVenue extends ContractNetInitiator {
-
-        public InitiateNegotiationWithVenue(Agent a, ACLMessage msg) {
-            super(a, msg);
-        }
-
-        protected Vector prepareCfps(ACLMessage cfp) {
-            Vector v = new Vector();
-            System.out.println();
-
-            for (int i = 0; i < existent_venues.length; i++) {
-                cfp.addReceiver(new AID(existent_venues[i].getName().getLocalName(), false));
-                //System.out.println(getLocalName() + " - Sending Call For Proposal (CFP) to " + existent_venues[i].getName().getLocalName());
-            }
-            cfp.setContent(getLocalName() + " is the Venue ready?");
-            v.add(cfp);
-            return v;
-        }
-
-        protected void handleAllResponses(Vector responses, Vector acceptances) {
-            //System.out.println("\n" + getLocalName() + " got " + responses.size() + " responses!");
-
-            for (int i = 0; i < responses.size(); i++) {
-                ACLMessage msg = ((ACLMessage) responses.get(i));
-
-                switch (msg.getPerformative()) {
-                    case ACLMessage.REFUSE:
-                        //retry();
-                        break;
-                    case ACLMessage.PROPOSE:
-                        //venue_has_shows++;
-                        System.out.println("Spectator : " + getLocalName() + " has a proprosal from " + msg.getSender().getLocalName());
-                        System.out.println("MESSAGE: " + msg.getContent().toString());
-
-                        String[] show = msg.getContent().split("//");
-                        String venue_name = msg.getSender().getLocalName();
-                        int venue_location = Integer.valueOf(show[0]);
-
-                        for (int j = 1; j < show.length; j++) {
-                            ACLMessage temp = msg.shallowClone();
-                            String[] show_information = show[j].split("::");
-
-                            /*String band_name = show_information[0];
-                            int ticket_price = Integer.valueOf(show_information[1]);
-                            int prestige = Integer.valueOf(show_information[2]);*/
-                            int genre = Integer.valueOf(show_information[3]);
-
-                            String message = venue_name + "::" + venue_location + "::"
-                                    + show_information[0] + "::" + show_information[1] + "::"
-                                    + show_information[2] + "::" + show_information[3];
-
-                            if (genre >= min_genre_spectrum && genre <= max_genre_spectrum) {
-                                temp.setContent(message);
-
-                                System.out.println("OLA " + temp.getContent());
-                                wanted_shows.add(temp);
-                            }
-
-                        }
-                        break;
-                }
-
-            }
-
-            for(ACLMessage asd : wanted_shows) {
-                System.out.println("Wanted shows by : " + getLocalName() + " - " + asd.getContent());
-            }
-        }
-
-        protected void handleAllResultNotifications(Vector resultNotifications) {
-            if (Utils.DEBUG)
-                System.out.println("Spectator: " + getLocalName() + " got " + resultNotifications.size() + " result notifications!");
-        }
-    }
 }
 
