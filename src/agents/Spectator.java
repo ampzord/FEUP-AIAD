@@ -12,6 +12,7 @@ import jade.domain.FIPAException;
 
 import java.util.ArrayList;
 import java.util.Vector;
+import java.util.Collections;
 
 public class Spectator extends Agent {
 
@@ -29,6 +30,7 @@ public class Spectator extends Agent {
     private SpectatorBehaviour behaviour;
     private Behaviour init_negotiations;
     private int venue_has_shows;
+    private ArrayList<ACLMessage> show_proposals;
 
     @Override
     public String toString() {
@@ -111,6 +113,7 @@ public class Spectator extends Agent {
         //wanted_shows = new ArrayList<>();
         wanted_shows = new ArrayList<>();
         venue_has_shows = 0;
+        show_proposals = new ArrayList<>();
     }
 
     private void printSpectatorInformation() {
@@ -261,6 +264,19 @@ public class Spectator extends Agent {
                         getMostBandsBehaviour();
                         break;
 
+                    case MOSTPRESTIGE:
+                        System.out.println("Starting mostPrestige Spectator Behaviour");
+                        getMostPrestigeBehaviour();
+                        break;
+
+                    case LEASTCOST:
+                        System.out.println("Starting leastCost Spectator Behaviour");
+                        break;
+
+                    case LEASTDISTANCE:
+                        System.out.println("Starting leastDistance Spectator Behaviour");
+                        break;
+
                     default:
                         break;
                 }
@@ -296,6 +312,32 @@ public class Spectator extends Agent {
             //calculateBestShows(ordered_possible_bands);
         }
 
+
+        private void getMostPrestigeBehaviour() {
+            ArrayList<ACLMessage> wanted_shows = wanted_shows;
+
+            for(ACLMessage show : wanted_shows)
+                System.out.println(show.getContent());
+
+            sortShows(wanted_shows);
+            Collections.reverse(wanted_shows);
+
+            int remainder_budget = budget;
+            for (int i = 0; i < wanted_shows.size(); i++) {
+                String[] content = wanted_shows.get(i).getContent().split("::");
+                int min_price = Integer.parseInt(content[2]);
+
+                if (remainder_budget >= min_price) {
+                    remainder_budget -= min_price;
+                    wanted_shows.get(i).setContent(Integer.toString(min_price));
+                }
+                else {
+                    wanted_shows.get(i).setContent("0");
+                }
+                show_proposals.add(wanted_shows.get(i));
+            }
+        }
+
         private void calculateBestShows(ArrayList<ACLMessage> shows) {
             switch(behaviour) {
                 case MOSTBANDS:
@@ -324,6 +366,20 @@ public class Spectator extends Agent {
             switch(behaviour) {
                 case MOSTBANDS:
                     sortShowsByLowestPrice(shows);
+
+                case MOSTPRESTIGE:
+                    sortShowsByPrestige(shows);
+                    break;
+
+                case LEASTCOST:
+                    //sortShowsByCost(shows);
+                    break;
+
+                case LEASTDISTANCE:
+                    //sortShowsByDistance(shows);
+                    break;
+
+                default:
                     break;
             }
         }
@@ -348,6 +404,35 @@ public class Spectator extends Agent {
                     else if (ticket_price1 == ticket_price2)
                     {
                         if (Math.abs(location-location1) > Math.abs(location-location2)) {
+                            ACLMessage temp = shows.get(j);
+                            shows.set(j, shows.get(j + 1));
+                            shows.set(j + 1, temp);
+                        }
+                    }
+                }
+        }
+
+
+        private void sortShowsByPrestige(ArrayList<ACLMessage> shows){
+            int n = shows.size();
+            for (int i = 0; i < n-1; i++)
+                for (int j = 0; j < n-i-1; j++) {
+                    String[] content1 = shows.get(j).getContent().split("::");
+                    String[] content2 = shows.get(j+1).getContent().split("::");
+                    int prestige1 = Integer.parseInt(content1[2]);
+                    int prestige2 = Integer.parseInt(content2[2]);
+                    int ticket_price1 = Integer.parseInt(content1[3]);
+                    int ticket_price2 = Integer.parseInt(content2[3]);
+
+                    if (prestige1 > prestige2)
+                    {
+                        ACLMessage temp = shows.get(j);
+                        shows.set(j, shows.get(j+1));
+                        shows.set(j+1, temp);
+                    }
+                    else if (prestige1 == prestige2)
+                    {
+                        if (ticket_price2 > ticket_price1) {
                             ACLMessage temp = shows.get(j);
                             shows.set(j, shows.get(j + 1));
                             shows.set(j + 1, temp);
