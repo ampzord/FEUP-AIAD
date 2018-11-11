@@ -163,6 +163,7 @@ public class Band extends Agent {
 
         protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) {
             ACLMessage result = request.createReply();
+            System.out.println("BAND: " + getLocalName() + " ----- " + business_cards_handed + " must be == to proposals.size");
 
             switch (request.getOntology()) {
                 case "Give_BusinessCard":
@@ -178,8 +179,8 @@ public class Band extends Agent {
                     result.setPerformative(ACLMessage.INFORM);
                     result.setOntology("Hiring");
 
-                    System.out.println("BAND: " + " ------ business_cards_handed = " + business_cards_handed + "  &&  all_proposals.size = " + all_proposals.size() + " ------------ " + getLocalName());
-                    if (business_cards_handed == all_proposals.size()) {
+                    //System.out.println("BAND: " + " ------ business_cards_handed = " + business_cards_handed + "  &&  all_proposals.size = " + all_proposals.size() + " ------------ " + getLocalName());
+                    if (business_cards_handed == all_proposals.size() && business_cards_handed > 0) {
                         business_cards_handed = 0;
 
                         ArrayList<Pair<String, Integer>> temp = new ArrayList();
@@ -192,6 +193,7 @@ public class Band extends Agent {
                         if(Utils.DEBUG)
                             System.out.println("BAND: " + getLocalName() + " will now respond to all Venues");
                         decideWhereToPlay();
+
 
                         addBehaviour(new ConfirmShow(this.myAgent, null, temp));
                     }
@@ -275,6 +277,8 @@ public class Band extends Agent {
                 }
                 v.add(m);
             }
+
+            System.out.println("BAND: " + getLocalName() + " got " + proposals.size() + " replying to " + v.size());
 
             return v;
         }

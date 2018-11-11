@@ -23,12 +23,11 @@ public class Spectator extends Agent {
     private int min_genre_spectrum;
     private int max_genre_spectrum;
     private int location;
-    //private ArrayList<ACLMessage> all_shows;
+    private ArrayList<String> ticket_shows_bought;
     private ArrayList<ACLMessage> wanted_shows;
     private DFAgentDescription[] existent_venues;
     private SpectatorBehaviour behaviour;
     private Behaviour init_negotiations;
-    private int venue_has_shows;
 
     @Override
     public String toString() {
@@ -108,9 +107,8 @@ public class Spectator extends Agent {
         setMax_genre_spectrum((int) getArguments()[3]);
         setLocation((int) getArguments()[4]);
         setBehaviour((String) getArguments()[5]);
-        //wanted_shows = new ArrayList<>();
         wanted_shows = new ArrayList<>();
-        venue_has_shows = 0;
+        ticket_shows_bought = new ArrayList<>();
     }
 
     private void printSpectatorInformation() {
@@ -205,7 +203,7 @@ public class Spectator extends Agent {
         }
 
         protected void handleAllResponses(Vector responses, Vector acceptances) {
-            //System.out.println("\n" + getLocalName() + " got " + responses.size() + " responses!");
+            System.out.println("\n" + getLocalName() + " got " + responses.size() + " responses!");
 
             for (int i = 0; i < responses.size(); i++) {
                 ACLMessage msg = ((ACLMessage) responses.get(i));
@@ -216,8 +214,8 @@ public class Spectator extends Agent {
                         break;
                     case ACLMessage.PROPOSE:
                         //venue_has_shows++;
-                        System.out.println("Spectator : " + getLocalName() + " has a proprosal from " + msg.getSender().getLocalName());
-                        System.out.println("MESSAGE: " + msg.getContent().toString());
+                        //System.out.println("Spectator : " + getLocalName() + " has a proprosal from " + msg.getSender().getLocalName());
+                        //System.out.println("MESSAGE: " + msg.getContent().toString());
 
                         String[] show = msg.getContent().split("//");
                         String venue_name = msg.getSender().getLocalName();
@@ -238,8 +236,6 @@ public class Spectator extends Agent {
 
                             if (genre >= min_genre_spectrum && genre <= max_genre_spectrum && ticket_price <= budget) {
                                 temp.setContent(message);
-
-                                System.out.println("OLA " + temp.getContent());
                                 wanted_shows.add(temp);
                             }
 
@@ -252,72 +248,66 @@ public class Spectator extends Agent {
             if (wanted_shows.size() <= 0) {
                 System.out.println("SPECTATOR: " + getLocalName() + " no more shows available.");
             } else {
-                for (ACLMessage asd : wanted_shows)
-                    System.out.println("Wanted shows by : " + getLocalName() + " - " + asd.getContent());
+                if (Utils.DEBUG)
+                    for (ACLMessage m : wanted_shows)
+                        System.out.println("Wanted shows by : " + getLocalName() + " - " + m.getContent());
 
                 switch (behaviour) {
                     case MOSTBANDS:
-                        System.out.println("Starting mostBands Spectator Behaviour");
                         getMostBandsBehaviour();
                         break;
 
                     default:
                         break;
                 }
+
+                for (ACLMessage m : wanted_shows) {
+                    ACLMessage reply = m.createReply();
+
+                    String[] content = m.getContent().split("::");
+                    String band_name = content[2];
+                    int ticket_price = Integer.parseInt(content[3]);
+
+                    int temp_budget = budget;
+
+                    if (temp_budget >= ticket_price) {
+                        temp_budget -= ticket_price;
+                        reply.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
+                        reply.setContent(m.getContent());
+                    } else {
+                        reply.setPerformative(ACLMessage.REJECT_PROPOSAL);
+                        reply.setContent("");
+                    }
+
+                    acceptances.add(reply);
+
+                }
             }
         }
 
-        protected void handleAllResultNotifications(Vector resultNotifications) {
-            if (Utils.DEBUG)
-                System.out.println("Spectator: " + getLocalName() + " got " + resultNotifications.size() + " result notifications!");
+        protected void handleInform(ACLMessage inform) {
+            String[] tokens = inform.getContent().split("::");
+            int ticket_price = Integer.parseInt(tokens[3]);
+
+            if (ticket_price <= budget) {
+                budget -= ticket_price;
+                ticket_shows_bought.add(inform.getContent());
+
+
+                System.out.println("Spectator " + getLocalName() + " is going to " + tokens[0] + " to watch " + tokens[2]);
+            }
+        }
+
+        protected void	handleFailure(ACLMessage failure) {
+            System.out.println("--------------==================RETRY==============----------------");
         }
 
         /* --- */
 
         private void getMostBandsBehaviour() {
-            /*
-            ArrayList<ACLMessage> ordered_possible_bands = possible_bands;
-            sortBands(ordered_possible_bands);
-            Collections.reverse(ordered_possible_bands);
-            calculateBestBands(ordered_possible_bands);*/
-
             ArrayList<ACLMessage> ordered_possible_bands = wanted_shows;
-
-            for (ACLMessage show : ordered_possible_bands)
-                System.out.println(show.getContent());
-
             sortShows(ordered_possible_bands);
-
-            System.out.println("DEPOIS DE SORT");
-
-            for (ACLMessage show : ordered_possible_bands)
-                System.out.println(show.getContent());
-
-            //calculateBestShows(ordered_possible_bands);
-        }
-
-        private void calculateBestShows(ArrayList<ACLMessage> shows) {
-            switch(behaviour) {
-                case MOSTBANDS:
-                    calculateMostBandsBehaviour(shows);
-                    break;
-            }
-        }
-
-        void calculateMostBandsBehaviour(ArrayList<ACLMessage> shows) {
-            /*int remainder_budget = budget;
-            for (int i = 0; i < possible_bands.size(); i++) {
-                String[] content = possible_bands.get(i).getContent().split("::");
-                int min_price = Integer.parseInt(content[2]);
-
-                if (remainder_budget >= min_price && isProfitable(possible_bands.get(i))) {
-                    remainder_budget -= min_price;
-                    possible_bands.get(i).setContent(Integer.toString(min_price));
-                } else {
-                    possible_bands.get(i).setContent("0");
-                }
-                venue_proposal.add(possible_bands.get(i));
-            }*/
+            wanted_shows = ordered_possible_bands;
         }
 
         private void sortShows(ArrayList<ACLMessage> shows) {

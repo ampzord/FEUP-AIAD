@@ -111,7 +111,6 @@ public class Venue extends Agent {
         registerToDFService();
         searchBands();
         startBehaviours();
-        //addBehaviour(new ReceiveTicketRequest(this, MessageTemplate.MatchPerformative(ACLMessage.CFP)));
     }
 
     private void startBehaviours() {
@@ -277,7 +276,6 @@ public class Venue extends Agent {
                         System.out.println("VENUE: " + getLocalName() + " [GetInterestingBands] received " + possible_bands.size() + " business cards.");
 
                     if (possible_bands.size() == 0) {
-                        //System.out.println("Possible Bands Size is 0");
                         return;
                     }
 
@@ -308,7 +306,6 @@ public class Venue extends Agent {
                         System.out.println("VENUE: " + getLocalName() + " [GetInterestingBands] received " + possible_bands.size() + " business cards.");
 
                     if (possible_bands.size() == 0) {
-                        System.out.println("Possible Bands Size is 0");
                         return;
                     }
                     else
@@ -335,17 +332,19 @@ public class Venue extends Agent {
                 //System.out.println("VENUE: " + getLocalName() + " has " + shows.size() + " shows.");
 
                 line_up_ready = true;
+/*
 
                 System.out.println("------------------------- VENUE: " + getLocalName() + " SHOWS: -------------------------");
                 for (ArrayList<Object> show : shows) {
                     System.out.println("                     " + show.get(0)+ " \n                       ticket: " + show.get(1));
                 }
                 System.out.println("------------------------- ------------------------------------ -------------------------");
+*/
 
                 addBehaviour(new ReceiveTicketRequest(myAgent, MessageTemplate.MatchPerformative(ACLMessage.CFP)));
             }
 
-            System.out.println("VENUE: finished STEP 1 by " + getLocalName() + " @ [GetInterestingBands]");
+            //System.out.println("VENUE: finished STEP 1 by " + getLocalName() + " @ [GetInterestingBands]");
 
             return 0;
         }
@@ -395,7 +394,7 @@ public class Venue extends Agent {
         @Override
         public int onEnd() {
 
-            System.out.println("VENUE: finished STEP 2 by " + getLocalName() + " @ [HireBands]");
+            //System.out.println("VENUE: finished STEP 2 by " + getLocalName() + " @ [HireBands]");
 
             request_contract = new RequestContractToBand(venue, null);
             addBehaviour(request_contract);
@@ -699,9 +698,9 @@ public class Venue extends Agent {
         }
 
         @Override
-        public int onEnd() {
+        public int onEnd() {/*
             System.out.println("VENUE: finished STEP 4 by " + getLocalName() + " @ [RequestContractToBand]\n" +
-                    "       venue_proposal.size = " + venue_proposal.size());
+                    "       venue_proposal.size = " + venue_proposal.size());*/
             return 0;
         }
 
@@ -716,7 +715,7 @@ public class Venue extends Agent {
             super(a, mt);
         }
 
-        protected ACLMessage handleRequest(ACLMessage request) throws RefuseException {
+        protected ACLMessage handleRequest(ACLMessage request) {
             ACLMessage reply = request.createReply();
             if (request.getOntology().equals("Confirming_Presence") || request.getOntology().equals("Ignore_Message") || request.getOntology().equals("Refusing_Show")) {
                 band_responses++;
@@ -782,7 +781,7 @@ public class Venue extends Agent {
                         break;
                 }
 
-                System.out.println("VENUE: band responses =  " + band_responses + "  &&  venue_proposal.size = " + venue_proposal.size() + "    ----    " + getLocalName());
+                //System.out.println("VENUE: band responses =  " + band_responses + "  &&  venue_proposal.size = " + venue_proposal.size() + "    ----    " + getLocalName());
 
                 if (band_responses == venue_proposal.size()) {
                     if (Utils.DEBUG) {
@@ -791,7 +790,7 @@ public class Venue extends Agent {
                                 "VENUE : " + getLocalName() + " will now try to hire bands with leftover budget (" + budget + ").");
                     }
 
-                    System.out.println("VENUE: finished STEP 3 by " + getLocalName() + " @ [ConfirmsBandShow]");
+                    //System.out.println("VENUE: finished STEP 3 by " + getLocalName() + " @ [ConfirmsBandShow]");
 
                     if (shows.size() == 0)
                         widenSpectrums();
@@ -849,7 +848,7 @@ public class Venue extends Agent {
             ACLMessage reply = cfp.createReply();
 
             if (line_up_ready) {
-                System.out.println("Lineup is ready!");
+                //System.out.println("Lineup is ready!");
                 reply.setPerformative(ACLMessage.PROPOSE);
                 String message = "";
 
@@ -872,12 +871,33 @@ public class Venue extends Agent {
         }
 
         protected void handleRejectProposal(ACLMessage cfp, ACLMessage propose, ACLMessage reject) {
-            System.out.println("handleRejectProposal");
+            // nothing to see here
         }
 
         protected ACLMessage handleAcceptProposal(ACLMessage cfp, ACLMessage propose, ACLMessage accept) {
-            System.out.println("handleAcceptProposal");
-            return accept;
+            //procurar o show, ver se ha espaco na attendace (dar ou nao add) e fazer inform
+            ACLMessage result = accept.createReply();
+            boolean found_show = false;
+
+            for (ArrayList<Object> show : shows) {
+                String[] tokens = accept.getContent().split("::");
+                String band = tokens[2];
+                if (show.get(0).equals(band) && (Integer) show.get(4) > 0) {
+                    show.set(4, ((Integer) show.get(4))-1);
+                    result.setPerformative(ACLMessage.INFORM);
+                    result.setContent(accept.getContent());
+                    found_show = true;
+                    break;
+                }
+            }
+
+            if (!found_show) {
+                result.setPerformative(ACLMessage.FAILURE);
+                result.setContent("The show is sold out!");
+                System.out.println("The show is sold out!");
+            }
+
+            return result;
         }
 
     }
