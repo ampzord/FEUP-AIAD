@@ -125,11 +125,9 @@ public class Venue extends Agent {
 
         getInterestingBands.block();
         show_confirmations.block();
-        hire_bands.block();
         request_contract.block();
         removeBehaviour(getInterestingBands);
         removeBehaviour(show_confirmations);
-        removeBehaviour(hire_bands);
         removeBehaviour(request_contract);
 
         startBehaviours();
@@ -279,8 +277,10 @@ public class Venue extends Agent {
                         return;
                     }
 
-                    else
+                    else {
                         hireBands();
+
+                    }
                 }
             }
         }
@@ -308,8 +308,10 @@ public class Venue extends Agent {
                     if (possible_bands.size() == 0) {
                         return;
                     }
-                    else
+                    else {
                         hireBands();
+
+                    }
                 }
             }
         }
@@ -319,53 +321,6 @@ public class Venue extends Agent {
         }
 
         private void hireBands() {
-            hire_bands = new HireBands((Venue)getAgent());
-            addBehaviour(hire_bands);
-            requests_done = 0;
-        }
-
-        @Override
-        public int onEnd() {
-            if (possible_bands.size() == 0) {
-
-                System.out.println("VENUE: " + getLocalName() + " - " + "No more bands available. Exiting...");
-                //System.out.println("VENUE: " + getLocalName() + " has " + shows.size() + " shows.");
-
-                line_up_ready = true;
-/*
-
-                System.out.println("------------------------- VENUE: " + getLocalName() + " SHOWS: -------------------------");
-                for (ArrayList<Object> show : shows) {
-                    System.out.println("                     " + show.get(0)+ " \n                       ticket: " + show.get(1));
-                }
-                System.out.println("------------------------- ------------------------------------ -------------------------");
-*/
-
-                addBehaviour(new ReceiveTicketRequest(myAgent, MessageTemplate.MatchPerformative(ACLMessage.CFP)));
-            }
-
-            //System.out.println("VENUE: finished STEP 1 by " + getLocalName() + " @ [GetInterestingBands]");
-
-            return 0;
-        }
-    }
-
-    /**
-     *   Venue Behaviour to hire Bands
-     */
-    class HireBands extends Behaviour {
-
-        Venue venue;
-        boolean flag;
-
-        public HireBands(Venue v) {
-            venue = v;
-            flag = false;
-        }
-
-        @Override
-        public void action() {
-
             switch(behaviour){
                 case MOSTBANDS:
                     getMostBandsBehaviour();
@@ -383,24 +338,13 @@ public class Venue extends Agent {
                     break;
             }
 
-            flag = true;
-        }
+            System.out.println("VENUE: finished STEP 2 by " + getLocalName() + " @ [HireBands]");
 
-        @Override
-        public boolean done() {
-            return flag;
-        }
-
-        @Override
-        public int onEnd() {
-
-            //System.out.println("VENUE: finished STEP 2 by " + getLocalName() + " @ [HireBands]");
-
-            request_contract = new RequestContractToBand(venue, null);
+            request_contract = new RequestContractToBand(myAgent, null);
             addBehaviour(request_contract);
-            return 0;
-        }
 
+            requests_done = 0;
+        }
         /* ------------- */
 
         private void getMostBandsBehaviour() {
@@ -634,6 +578,30 @@ public class Venue extends Agent {
             return prestige*prestige;
         }
 
+        @Override
+        public int onEnd() {
+            if (possible_bands.size() == 0) {
+
+                System.out.println("VENUE: " + getLocalName() + " - " + "No more bands available. Exiting...");
+                //System.out.println("VENUE: " + getLocalName() + " has " + shows.size() + " shows.");
+
+                line_up_ready = true;
+/*
+
+                System.out.println("------------------------- VENUE: " + getLocalName() + " SHOWS: -------------------------");
+                for (ArrayList<Object> show : shows) {
+                    System.out.println("                     " + show.get(0)+ " \n                       ticket: " + show.get(1));
+                }
+                System.out.println("------------------------- ------------------------------------ -------------------------");
+*/
+
+                addBehaviour(new ReceiveTicketRequest(myAgent, MessageTemplate.MatchPerformative(ACLMessage.CFP)));
+            }
+
+            System.out.println("VENUE: finished STEP 1 by " + getLocalName() + " @ [GetInterestingBands]");
+
+            return 0;
+        }
     }
 
     /**
@@ -698,9 +666,9 @@ public class Venue extends Agent {
         }
 
         @Override
-        public int onEnd() {/*
-            System.out.println("VENUE: finished STEP 4 by " + getLocalName() + " @ [RequestContractToBand]\n" +
-                    "       venue_proposal.size = " + venue_proposal.size());*/
+        public int onEnd() {
+            System.out.println("VENUE: finished STEP 3 by " + getLocalName() + " @ [RequestContractToBand]\n" +
+                    "       venue_proposal.size = " + venue_proposal.size());
             return 0;
         }
 
@@ -716,6 +684,8 @@ public class Venue extends Agent {
         }
 
         protected ACLMessage handleRequest(ACLMessage request) {
+            System.out.println("BAND: " + getLocalName() + "enters step 2");
+
             ACLMessage reply = request.createReply();
             if (request.getOntology().equals("Confirming_Presence") || request.getOntology().equals("Ignore_Message") || request.getOntology().equals("Refusing_Show")) {
                 band_responses++;
@@ -790,7 +760,7 @@ public class Venue extends Agent {
                                 "VENUE : " + getLocalName() + " will now try to hire bands with leftover budget (" + budget + ").");
                     }
 
-                    //System.out.println("VENUE: finished STEP 3 by " + getLocalName() + " @ [ConfirmsBandShow]");
+                    System.out.println("VENUE: finished STEP 2 by " + getLocalName() + " @ [ConfirmsBandShow]");
 
                     if (shows.size() == 0)
                         widenSpectrums();
