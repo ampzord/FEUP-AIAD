@@ -449,8 +449,40 @@ public class Venue extends Agent {
         }
 
         //TODO MostProfitBehaviour
+        //TODO check if bands ordered by profict are in the correct order before final calculations
         private void calculateBestBandsMostProfitBehaviour(ArrayList<ACLMessage> possible_bands) {
+            
+            ArrayList<Pair<Integer, ACLMessage> profit_per_band = new ArrayList<>();
+            
+            for(int i = 0; i < possible_bands.size(); i++){
+                
+                int tmp_profit = getProfit(possible_bands.get(i));
+                Pair<Integer, ACLMessage> tmp = new Pair<>((Integer) tmp_profit, possible_bands.get(i));
+                profit_per_band.add(tmp);
+            }
 
+            sortBandsbyMostProfit(profit_per_band);
+
+            ArrayList<ACLMessage> ordered_bands_by_profit
+
+            for(int i = 0; i < possible_bands.size(); i++){
+                possible_bands.set(i, profit_per_band.get(i).getValue());
+            }
+
+            int remainder_budget = budget;
+            for (int i = 0; i < possible_bands.size(); i++) {
+                String[] content = possible_bands.get(i).getContent().split("::");
+                int min_price = Integer.parseInt(content[2]);
+
+                if (remainder_budget >= min_price && isProfitable(possible_bands.get(i))) {
+                    remainder_budget -= min_price;
+                    possible_bands.get(i).setContent(Integer.toString(min_price));
+                }
+                else {
+                    possible_bands.get(i).setContent("0");
+                }
+                venue_proposal.add(possible_bands.get(i));
+            }
         }
 
         private void calculateBestBandsMostPrestigeBehaviour(ArrayList<ACLMessage> possible_bands) {
@@ -544,8 +576,21 @@ public class Venue extends Agent {
         }
 
         //TODO MostProfitSort
-        private void sortBandsbyMostProfit(ArrayList<ACLMessage> ordered_possible_bands) {
+        private void sortBandsbyMostProfit(ArrayList<Pair<Integer, ACLMessage>> ordered_possible_bands) {
 
+            int n = ordered_possible_bands.size();
+            for (int i = 0; i < n-1; i++)
+                for (int j = 0; j < n-i-1; j++) {
+                    String[] profit1 = ordered_possible_bands.get(j).getKey();
+                    String[] profit2 = ordered_possible_bands.get(j+1).getKey();
+
+                    if (profit1 < profit2)
+                    {
+                        ACLMessage temp = ordered_possible_bands.get(j);
+                        ordered_possible_bands.set(j, ordered_possible_bands.get(j+1));
+                        ordered_possible_bands.set(j+1, temp);
+                    }
+                }
         }
 
         private void sortBandsByMostPrestige(ArrayList<ACLMessage> array) {
