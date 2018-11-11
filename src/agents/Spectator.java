@@ -3,6 +3,8 @@ import jade.core.AID;
 import jade.core.Agent;
 import jade.core.behaviours.Behaviour;
 import jade.proto.ContractNetInitiator;
+import jade.wrapper.AgentController;
+import jade.wrapper.StaleProxyException;
 import utils.Utils;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.DFService;
@@ -12,8 +14,10 @@ import jade.domain.FIPAException;
 
 import java.util.ArrayList;
 import java.util.Vector;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class Spectator extends Agent {
+
 
     public enum SpectatorBehaviour {
         MOSTBANDS, MOSTPRESTIGE, LEASTDISTANCE, LEASTCOST;
@@ -28,6 +32,7 @@ public class Spectator extends Agent {
     private DFAgentDescription[] existent_venues;
     private SpectatorBehaviour behaviour;
     private Behaviour init_negotiations;
+    private ConcurrentLinkedQueue<AgentController> queue;
 
     @Override
     public String toString() {
@@ -82,6 +87,9 @@ public class Spectator extends Agent {
                 break;
         }
     }
+    public void setQueue(ConcurrentLinkedQueue<AgentController> queue) {
+        this.queue = queue;
+    }
 
     public void setup() {
         setSpectatorInformation();
@@ -95,12 +103,6 @@ public class Spectator extends Agent {
         addBehaviour(init_negotiations);
     }
 
-    private void retry() {
-        init_negotiations.block();
-        removeBehaviour(init_negotiations);
-        startBehaviours();
-    }
-
     private void setSpectatorInformation() {
         setBudget((int) getArguments()[1]);
         setMin_genre_spectrum((int) getArguments()[2]);
@@ -109,6 +111,7 @@ public class Spectator extends Agent {
         setBehaviour((String) getArguments()[5]);
         wanted_shows = new ArrayList<>();
         ticket_shows_bought = new ArrayList<>();
+        queue = (ConcurrentLinkedQueue<AgentController>) getArguments()[6];
     }
 
     private void printSpectatorInformation() {
@@ -296,6 +299,14 @@ public class Spectator extends Agent {
 
                 System.out.println("Spectator " + getLocalName() + " is going to " + tokens[0] + " to watch " + tokens[2]);
             }
+
+            if (!queue.isEmpty()) {
+                try {
+                    queue.poll().start();
+                } catch (StaleProxyException e) {
+                    e.printStackTrace();
+                }
+            }
         }
 
         protected void	handleFailure(ACLMessage failure) {
@@ -344,6 +355,19 @@ public class Spectator extends Agent {
                         }
                     }
                 }
+        }
+
+        @Override
+        public int onEnd(){
+            System.out.println("ENTREI PUTAS");
+            if (!queue.isEmpty()) {
+                try {
+                    queue.poll().start();
+                } catch (StaleProxyException e) {
+                    e.printStackTrace();
+                }
+            }
+            return 0;
         }
     }
 }

@@ -1,3 +1,4 @@
+import jade.core.Agent;
 import jade.core.Profile;
 import jade.core.ProfileImpl;
 import jade.core.Runtime;
@@ -6,6 +7,7 @@ import jade.wrapper.ContainerController;
 import jade.wrapper.StaleProxyException;
 import utils.Utils;
 import java.io.IOException;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 
 public class JADELauncher {
@@ -68,15 +70,21 @@ public class JADELauncher {
 			e.printStackTrace();
 		}
 
+		ConcurrentLinkedQueue<AgentController> spectatorQueue = new ConcurrentLinkedQueue<>();
+
 		/* INIT SPECTATORS */
 		AgentController ac4;
 		try {
 			Utils.readFileSpectators(Utils.PATH_SPECTATORS);
 
 			for (Object[] spectator : Utils.spectatorsInformation) {
+				spectator[6] = spectatorQueue;
 				ac4 = spectators.createNewAgent((String) spectator[0], "agents.Spectator", spectator);
-				ac4.start();
+				spectatorQueue.add(ac4);
 			}
+
+			spectatorQueue.poll().start();
+
 			System.out.println("\n--- Spectators ---\n");
 
 		} catch (StaleProxyException e) {

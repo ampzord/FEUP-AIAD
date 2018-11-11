@@ -9,8 +9,8 @@ public class Utils {
     public final static String PATH_VENUES = "./input/venues.txt";
     public static ArrayList<Object[]> venuesInformation;
     public final static String PATH_SPECTATORS = "./input/spectators.txt";
-
     public static ArrayList<Object[]> spectatorsInformation;
+
     public final static int ITENERATION_COST_PER_DISTANCE = 10;
     public final static int SPECTATORS_PER_SPECTATOR_AGENT = 1000;
     public final static int MAX_SHOWS_PER_BAND = 1;
@@ -138,7 +138,7 @@ public class Utils {
                     aux++; continue;
                 }
 
-                Object[] spectator = new Object[6];
+                Object[] spectator = new Object[7];
                 String[] tokens = line.split(";");
 
                 if (!validInputOfSpectators(tokens))
