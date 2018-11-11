@@ -286,7 +286,7 @@ public class Venue extends Agent {
                         System.out.println("VENUE: " + getLocalName() + " [GetInterestingBands] received " + possible_bands.size() + " business cards.");
 
                     if (possible_bands.size() == 0) {
-                        System.out.println("Possible Bands Size is 0");
+                        //System.out.println("Possible Bands Size is 0");
                         return;
                     }
 
@@ -340,8 +340,8 @@ public class Venue extends Agent {
         public int onEnd() {
             if (possible_bands.size() == 0) {
 
-                System.out.println("VENUE: " + getLocalName() + " - " + "No more bands available. Exiting...");
-                System.out.println("VENUE: " + getLocalName() + " has " + shows.size() + " shows.");
+                //System.out.println("VENUE: " + getLocalName() + " - " + "No more bands available. Exiting...");
+                //System.out.println("VENUE: " + getLocalName() + " has " + shows.size() + " shows.");
 
                 line_up_ready = true;
             }
