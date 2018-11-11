@@ -39,32 +39,17 @@ public class Spectator extends Agent {
         return String.format("Spectator - %s, Budget=%4s, Min Genre Spectrum=%s, Max Genre Spectrum=%s, Location=%s,Behaviour=%s",
                 this.getLocalName(), this.budget, this.min_genre_spectrum, this.max_genre_spectrum, this.location, this.behaviour);
     }
-    public int getBudget() {
-        return budget;
-    }
     public void setBudget(int budget) {
         this.budget = budget;
-    }
-    public int getMin_genre_spectrum() {
-        return min_genre_spectrum;
     }
     public void setMin_genre_spectrum(int min_genre_spectrum) {
         this.min_genre_spectrum = min_genre_spectrum;
     }
-    public int getMax_genre_spectrum() {
-        return max_genre_spectrum;
-    }
     public void setMax_genre_spectrum(int max_genre_spectrum) {
         this.max_genre_spectrum = max_genre_spectrum;
     }
-    public int getLocation() {
-        return location;
-    }
     public void setLocation(int location) {
         this.location = location;
-    }
-    public DFAgentDescription[] getExistent_venues() {
-        return existent_venues;
     }
     public void setExistent_venues(DFAgentDescription[] existent_venues) {
         this.existent_venues = existent_venues;
@@ -77,6 +62,7 @@ public class Spectator extends Agent {
 
             case "MOSTPRESTIGE":
                 behaviour = SpectatorBehaviour.MOSTPRESTIGE;
+                break;
 
             case "LEASTDISTANCE":
                 behaviour = SpectatorBehaviour.LEASTDISTANCE;
@@ -86,9 +72,6 @@ public class Spectator extends Agent {
                 behaviour = SpectatorBehaviour.LEASTCOST;
                 break;
         }
-    }
-    public void setQueue(ConcurrentLinkedQueue<AgentController> queue) {
-        this.queue = queue;
     }
 
     public void setup() {
@@ -113,25 +96,6 @@ public class Spectator extends Agent {
         ticket_shows_bought = new ArrayList<>();
         queue = (ConcurrentLinkedQueue<AgentController>) getArguments()[6];
     }
-
-    private void printSpectatorInformation() {
-        System.out.println(this.toString());
-    }
-
-    private void registerToDFService() {
-        DFAgentDescription dfd = new DFAgentDescription();
-        dfd.setName(getAID());
-        ServiceDescription sd = new ServiceDescription();
-        sd.setType("spectator");
-        sd.setName(getLocalName());
-        dfd.addServices(sd);
-        try {
-            DFService.register(this, dfd);
-        } catch (FIPAException fe) {
-            fe.printStackTrace();
-        }
-    }
-
     public void takeDown() {
         System.out.println(getLocalName() + ": done working");
     }
@@ -147,40 +111,6 @@ public class Spectator extends Agent {
         } catch (FIPAException fe) {
             fe.printStackTrace();
         }
-    }
-
-    /**
-     * Holds the decision making of a spectator on the show to watch
-     */
-    class ViewShow extends Behaviour {
-
-        Spectator spec;
-        boolean flag;
-
-        public ViewShow(Spectator spec) {
-            spec = spec;
-            flag = false;
-        }
-
-        @Override
-        public void action() {
-
-
-            flag = true;
-        }
-
-        @Override
-        public boolean done() {
-            return flag;
-        }
-
-        @Override
-        public int onEnd() {
-            System.out.println("Entered SpectatorBehaviour onEnd()");
-            return 0;
-        }
-
-
     }
 
     /**
@@ -323,9 +253,81 @@ public class Spectator extends Agent {
             switch(behaviour) {
                 case MOSTBANDS:
                     sortShowsByLowestPrice(shows);
+
+                case MOSTPRESTIGE:
+                    sortShowsByPrestige(shows);
+                    break;
+
+                case LEASTCOST:
+                    //sortShowsByCost(shows);
+                    break;
+
+                case LEASTDISTANCE:
+                    sortShowsByDistance(shows);
+                    break;
+
+                default:
                     break;
             }
         }
+
+        private void sortShowsByPrestige(ArrayList<ACLMessage> shows){
+            int n = shows.size();
+            for (int i = 0; i < n-1; i++)
+                for (int j = 0; j < n-i-1; j++) {
+                    String[] content1 = shows.get(j).getContent().split("::");
+                    String[] content2 = shows.get(j+1).getContent().split("::");
+                    int prestige1 = Integer.parseInt(content1[4]);
+                    int prestige2 = Integer.parseInt(content2[4]);
+                    int ticket_price1 = Integer.parseInt(content1[3]);
+                    int ticket_price2 = Integer.parseInt(content2[3]);
+
+                    if (prestige1 > prestige2)
+                    {
+                        ACLMessage temp = shows.get(j);
+                        shows.set(j, shows.get(j+1));
+                        shows.set(j+1, temp);
+                    }
+                    else if (prestige1 == prestige2)
+                    {
+                        if (ticket_price2 > ticket_price1) {
+                            ACLMessage temp = shows.get(j);
+                            shows.set(j, shows.get(j + 1));
+                            shows.set(j + 1, temp);
+                        }
+                    }
+                }
+        }
+
+        private void sortShowsByDistance(ArrayList<ACLMessage> shows){
+            int n = shows.size();
+            for (int i = 0; i < n-1; i++)
+                for (int j = 0; j < n-i-1; j++) {
+                    String[] content1 = shows.get(j).getContent().split("::");
+                    String[] content2 = shows.get(j+1).getContent().split("::");
+                    int show_location1 = Integer.parseInt(content1[1]);
+                    int show_location2 = Integer.parseInt(content2[1]);
+
+                    int ticket_price1 = Integer.parseInt(content1[3]);
+                    int ticket_price2 = Integer.parseInt(content2[3]);
+
+                    if ( (location - show_location2) > (location - show_location1) )
+                    {
+                        ACLMessage temp = shows.get(j);
+                        shows.set(j, shows.get(j+1));
+                        shows.set(j+1, temp);
+                    }
+                    else if ( (location - show_location1) == (location - show_location2) )
+                    {
+                        if (ticket_price2 > ticket_price1) {
+                            ACLMessage temp = shows.get(j);
+                            shows.set(j, shows.get(j + 1));
+                            shows.set(j + 1, temp);
+                        }
+                    }
+                }
+        }
+
 
         private void sortShowsByLowestPrice(ArrayList<ACLMessage> shows) {
             int n = shows.size();
