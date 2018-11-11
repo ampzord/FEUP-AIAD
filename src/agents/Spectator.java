@@ -477,7 +477,7 @@ public class Spectator extends Agent {
                         shows.set(j, shows.get(j+1));
                         shows.set(j+1, temp);
                     }
-                    else if (location - show_location1 == (location - show_location2)
+                    else if ((location - show_location1) == (location - show_location2))
                     {
                         if (ticket_price2 > ticket_price1) {
                             ACLMessage temp = shows.get(j);
