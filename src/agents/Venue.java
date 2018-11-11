@@ -110,7 +110,7 @@ public class Venue extends Agent {
         registerToDFService();
         searchBands();
         startBehaviours();
-        addBehaviour(new ReceiveTicketRequest(this, MessageTemplate.MatchPerformative(ACLMessage.CFP)));
+        //addBehaviour(new ReceiveTicketRequest(this, MessageTemplate.MatchPerformative(ACLMessage.CFP)));
     }
 
     private void startBehaviours() {
@@ -334,7 +334,7 @@ public class Venue extends Agent {
                 //System.out.println("VENUE: " + getLocalName() + " has " + shows.size() + " shows.");
 
                 line_up_ready = true;
-                //addBehaviour(new ReceiveTicketRequest(myAgent, MessageTemplate.MatchPerformative(ACLMessage.CFP)));
+                addBehaviour(new ReceiveTicketRequest(myAgent, MessageTemplate.MatchPerformative(ACLMessage.CFP)));
             }
 
             System.out.println("VENUE: finished STEP 1 by " + getLocalName() + " @ [GetInterestingBands]");
