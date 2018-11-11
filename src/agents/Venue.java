@@ -334,6 +334,14 @@ public class Venue extends Agent {
                 //System.out.println("VENUE: " + getLocalName() + " has " + shows.size() + " shows.");
 
                 line_up_ready = true;
+
+                System.out.println("------------------------- VENUE: " + getLocalName() + " SHOWS: -------------------------");
+                for (ArrayList<Object> show : shows) {
+                    System.out.println("                     " + show.get(0));
+                    System.out.println("                       ticket: " + show.get(1));
+                }
+                System.out.println("------------------------- ------------------------------------ -------------------------");
+
                 addBehaviour(new ReceiveTicketRequest(myAgent, MessageTemplate.MatchPerformative(ACLMessage.CFP)));
             }
 

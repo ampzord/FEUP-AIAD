@@ -17,13 +17,8 @@ import javafx.util.Pair;
 
 public class Band extends Agent {
 
-    private int genre;
-    private int prestige;
-    private int min_price;
-    private int min_attendance;
-    private int current_shows;
+    private int genre, prestige, min_price, min_attendance, current_shows, business_cards_handed;
     private ArrayList<Pair<String, Integer>> all_proposals;
-    private int business_cards_handed;
 
     @Override
     public String toString() {
@@ -183,12 +178,22 @@ public class Band extends Agent {
                     result.setPerformative(ACLMessage.INFORM);
                     result.setOntology("Hiring");
 
+                    System.out.println("BAND: " + " ------ business_cards_handed = " + business_cards_handed + "  &&  all_proposals.size = " + all_proposals.size() + " ------------ " + getLocalName());
                     if (business_cards_handed == all_proposals.size()) {
+                        business_cards_handed = 0;
+
+                        ArrayList<Pair<String, Integer>> temp = new ArrayList();
+                        for (Pair<String, Integer> p : all_proposals) {
+                            temp.add(p);
+                        }
+
+                        all_proposals = new ArrayList<>();
+
                         if(Utils.DEBUG)
                             System.out.println("BAND: " + getLocalName() + " will now respond to all Venues");
                         decideWhereToPlay();
 
-                        addBehaviour(new ConfirmShow(this.myAgent, null));
+                        addBehaviour(new ConfirmShow(this.myAgent, null, temp));
                     }
 
                     break;
@@ -228,40 +233,43 @@ public class Band extends Agent {
      */
     class ConfirmShow extends AchieveREInitiator {
 
-        public ConfirmShow(Agent a, ACLMessage msg) {
+        ArrayList<Pair<String, Integer>> proposals;
+
+        public ConfirmShow(Agent a, ACLMessage msg, ArrayList<Pair<String, Integer>> temp) {
             super(a, msg);
+            proposals = temp;
         }
 
         protected Vector<ACLMessage> prepareRequests(ACLMessage msg) {
             Vector<ACLMessage> v = new Vector<>();
 
-            for (int i = 0; i < all_proposals.size(); i++) {
+            for (int i = 0; i < proposals.size(); i++) {
                 ACLMessage m = new ACLMessage(ACLMessage.REQUEST);
 
-                if (current_shows < Utils.MAX_SHOWS_PER_BAND && all_proposals.get(i).getValue() >= min_price) {
+                if (current_shows < Utils.MAX_SHOWS_PER_BAND && proposals.get(i).getValue() >= min_price) {
                     current_shows++;
                     m.setOntology("Confirming_Presence");
-                    m.addReceiver(new AID(all_proposals.get(i).getKey(), false));
+                    m.addReceiver(new AID(proposals.get(i).getKey(), false));
 
                     if (Utils.DEBUG)
-                        System.out.println("BAND: " + getLocalName() + " vvv Confirming_Presence vvv @ " + all_proposals.get(i).getKey() + " for " + all_proposals.get(i).getValue() + "$");
-                    String content = getLocalName() + "::" + all_proposals.get(i).getValue() + "::" + prestige + "::" + genre;
+                        System.out.println("BAND: " + getLocalName() + " vvv Confirming_Presence vvv @ " + proposals.get(i).getKey() + " for " + proposals.get(i).getValue() + "$");
+                    String content = getLocalName() + "::" + proposals.get(i).getValue() + "::" + prestige + "::" + genre;
 
                     m.setContent(content);
-                } else if (all_proposals.get(i).getValue() == 0) {
+                } else if (proposals.get(i).getValue() == 0) {
                     m.setOntology("Ignore_Message");
-                    m.addReceiver(new AID(all_proposals.get(i).getKey(), false));
+                    m.addReceiver(new AID(proposals.get(i).getKey(), false));
 
                     if(Utils.DEBUG)
-                        System.out.println("BAND: " + getLocalName() + " --- Ignore_Message --- from " + all_proposals.get(i).getKey());
+                        System.out.println("BAND: " + getLocalName() + " --- Ignore_Message --- from " + proposals.get(i).getKey());
 
                     m.setContent("");
                 } else {
                     m.setOntology("Refusing_Show");
-                    m.addReceiver(new AID(all_proposals.get(i).getKey(), false));
+                    m.addReceiver(new AID(proposals.get(i).getKey(), false));
 
                     if(Utils.DEBUG)
-                        System.out.println("BAND: " + getLocalName() + " XXX Refusing_Show XXX @ " + all_proposals.get(i).getKey() + " for " + all_proposals.get(i).getValue() + "$");
+                        System.out.println("BAND: " + getLocalName() + " XXX Refusing_Show XXX @ " + proposals.get(i).getKey() + " for " + proposals.get(i).getValue() + "$");
 
                     m.setContent("");
                 }
@@ -285,6 +293,13 @@ public class Band extends Agent {
 
         protected void handleFailure(ACLMessage failure) {
 
+        }
+
+        @Override
+        public int onEnd() {
+            System.out.println("BAND: " + getLocalName() + " finished informing all venues. Ending...");
+            myAgent.removeBehaviour(this);
+            return 0;
         }
     }
 }
