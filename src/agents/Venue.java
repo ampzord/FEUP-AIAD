@@ -337,7 +337,6 @@ public class Venue extends Agent {
             }
 
             System.out.println("VENUE: finished STEP 1 by " + getLocalName() + " @ [GetInterestingBands]");
-            System.out.println("VENUE: finished STEP 1 by " + getLocalName() + " @ [GetInterestingBands]");
 
             return 0;
         }
