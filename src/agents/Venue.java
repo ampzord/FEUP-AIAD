@@ -15,6 +15,7 @@ import jade.lang.acl.MessageTemplate;
 import jade.proto.AchieveREInitiator;
 import jade.proto.AchieveREResponder;
 import jade.proto.ContractNetResponder;
+import javafx.util.Pair;
 import utils.Utils;
 
 public class Venue extends Agent {
@@ -573,12 +574,13 @@ public class Venue extends Agent {
             int n = ordered_possible_bands.size();
             for (int i = 0; i < n-1; i++)
                 for (int j = 0; j < n-i-1; j++) {
+
                     int profit1 = getProfit(ordered_possible_bands.get(j));
                     int profit2 = getProfit(ordered_possible_bands.get(j+1));
 
                     if (profit1 < profit2)
                     {
-                        ACLMessage temp = ordered_possible_bands.get(j);
+                        ACLMessage temp = ordered_possible_bands.get(j).getValue();
                         ordered_possible_bands.set(j, ordered_possible_bands.get(j+1));
                         ordered_possible_bands.set(j+1, temp);
                     }
