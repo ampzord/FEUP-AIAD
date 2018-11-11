@@ -1,6 +1,7 @@
 package agents;
 import jade.core.AID;
 import jade.core.Agent;
+import jade.core.behaviours.Behaviour;
 import jade.lang.acl.UnreadableException;
 import jade.proto.ContractNetInitiator;
 import javafx.util.Pair;
@@ -24,8 +25,12 @@ public class Spectator extends Agent {
     private int min_genre_spectrum;
     private int max_genre_spectrum;
     private int location;
+    private ArrayList<ArrayList<Object>> all_shows;
+    private ArrayList<ArrayList<Object>> wanted_shows;
     private DFAgentDescription[] existent_venues;
     private SpectatorBehaviour behaviour;
+    private Behaviour viewMostBands;
+    private int venue_has_shows;
 
     @Override
     public String toString() {
@@ -36,31 +41,40 @@ public class Spectator extends Agent {
     public int getBudget() {
         return budget;
     }
+
     public void setBudget(int budget) {
         this.budget = budget;
     }
+
     public int getMin_genre_spectrum() {
         return min_genre_spectrum;
     }
+
     public void setMin_genre_spectrum(int min_genre_spectrum) {
         this.min_genre_spectrum = min_genre_spectrum;
     }
+
     public int getMax_genre_spectrum() {
         return max_genre_spectrum;
     }
+
     public void setMax_genre_spectrum(int max_genre_spectrum) {
         this.max_genre_spectrum = max_genre_spectrum;
     }
+
     public int getLocation() {
         return location;
     }
+
     public void setLocation(int location) {
         this.location = location;
     }
+
     public DFAgentDescription[] getExistent_venues() {
         return existent_venues;
     }
-    public void setExistent_venues(DFAgentDescription[] existent_venues){
+
+    public void setExistent_venues(DFAgentDescription[] existent_venues) {
         this.existent_venues = existent_venues;
     }
 
@@ -87,15 +101,31 @@ public class Spectator extends Agent {
         setSpectatorInformation();
         printSpectatorInformation();
         searchVenues();
-        addBehaviour(new InitiateNegotiationWithVenue(this, new ACLMessage(ACLMessage.CFP)));
+        startBehaviours();
+        //addBehaviour(new InitiateNegotiationWithVenue(this, new ACLMessage(ACLMessage.CFP)));
+    }
+
+    private void startBehaviours() {
+        viewMostBands = new InitiateNegotiationWithVenue(this, new ACLMessage(ACLMessage.CFP));
+        addBehaviour(viewMostBands);
+    }
+
+    private void retry() {
+        //System.out.println("SPECTATOR: " + getLocalName() + " retrying...");
+        viewMostBands.block();
+        removeBehaviour(viewMostBands);
+        startBehaviours();
     }
 
     private void setSpectatorInformation() {
-        setBudget((int)getArguments()[0]);
-        setMin_genre_spectrum((int)getArguments()[1]);
-        setMax_genre_spectrum((int)getArguments()[2]);
-        setLocation((int)getArguments()[3]);
-        setBehaviour((String) getArguments()[4]);
+        setBudget((int) getArguments()[1]);
+        setMin_genre_spectrum((int) getArguments()[2]);
+        setMax_genre_spectrum((int) getArguments()[3]);
+        setLocation((int) getArguments()[4]);
+        setBehaviour((String) getArguments()[5]);
+        all_shows = new ArrayList<>();
+        wanted_shows = new ArrayList<>();
+        venue_has_shows = 0;
     }
 
     private void printSpectatorInformation() {
@@ -111,7 +141,7 @@ public class Spectator extends Agent {
         dfd.addServices(sd);
         try {
             DFService.register(this, dfd);
-        } catch(FIPAException fe) {
+        } catch (FIPAException fe) {
             fe.printStackTrace();
         }
     }
@@ -125,16 +155,111 @@ public class Spectator extends Agent {
         ServiceDescription sd = new ServiceDescription();
         sd.setType("venue");
         template.addServices(sd);
-        try{
+        try {
             DFAgentDescription[] result = DFService.search(this, template);
             setExistent_venues(result);
-        } catch(FIPAException fe){
+        } catch (FIPAException fe) {
             fe.printStackTrace();
         }
     }
 
     /**
-     * Start communication with Venue to decide which shows to view
+     * Holds the decision making of a spectator on the show to watch
+     */
+    class ViewShow extends Behaviour {
+
+        Spectator spec;
+        boolean flag;
+
+        public ViewShow(Spectator spec) {
+            spec = spec;
+            flag = false;
+        }
+
+        @Override
+        public void action() {
+
+            switch (behaviour) {
+                case MOSTBANDS:
+                    System.out.println("Starting mostBands Spectator Behaviour");
+                    //getMostBandsBehaviour();
+                    break;
+
+                default:
+                    break;
+            }
+
+            flag = true;
+        }
+
+        @Override
+        public boolean done() {
+            return flag;
+        }
+
+        @Override
+        public int onEnd() {
+            System.out.println("Entered SpectatorBehaviour onEnd()");
+            return 0;
+        }
+/*
+        private void getMostBandsBehaviour() {
+            ArrayList<ArrayList<Object>> array = all_shows;
+            sortShows(ordered_possible_bands);
+            Collections.reverse(ordered_possible_bands);
+            calculateBestShows(ordered_possible_bands);
+        }
+
+        private void calculateBestShows() {
+            switch(behaviour) {
+                case MOSTBANDS:
+                    calculateMostBandsBehaviour(possible_bands);
+                    break;
+            }
+        }
+
+        private void sortShows(ArrayList<ArrayList<Object>> show) {
+            switch(behaviour) {
+                case MOSTBANDS:
+                    sortShowsByLowestPrice(show);
+                    break;
+
+            }
+        }
+
+        private void sortShowsByLowestPrice(ArrayList<ArrayList<Object>> show) {
+            int n = show.size();
+            for (int i = 0; i < n-1; i++)
+                for (int j = 0; j < n-i-1; j++) {
+                    String[] content1 = bands.get(j).getContent().split("::");
+                    String[] content2 = bands.get(j+1).getContent().split("::");
+                    int rating1 = Integer.parseInt(content1[1]);
+                    int rating2 = Integer.parseInt(content2[1]);
+                    int min_preco1 = Integer.parseInt(content1[2]);
+                    int min_preco2 = Integer.parseInt(content2[2]);
+
+                    if (min_preco1 < min_preco2)
+                    {
+                        ACLMessage temp = bands.get(j);
+                        bands.set(j, bands.get(j+1));
+                        bands.set(j+1, temp);
+                    }
+                    else if (min_preco1 == min_preco2) {
+                        if (rating1 < rating2)
+                        {
+                            ACLMessage temp = bands.get(j);
+                            bands.set(j, bands.get(j+1));
+                            bands.set(j+1, temp);
+                        }
+                    }
+                }
+        }
+*/
+
+    }
+
+    /**
+     * Start communication with Venue to decide which shows the spectator will view
      */
     class InitiateNegotiationWithVenue extends ContractNetInitiator {
 
@@ -164,24 +289,50 @@ public class Spectator extends Agent {
                 switch (msg.getPerformative()) {
 
                     case ACLMessage.REFUSE:
-                        System.out.println("handleAllResponses - refuse");
-                        //System.out.println("SPECTATOR: " + getLocalName() + " got refuse from " + msg.getSender().getLocalName());
-                        //System.out.println("SPECTATOR: Restarting.");
-
+                        retry();
                         break;
 
                     case ACLMessage.PROPOSE:
-                        System.out.println("handleAllResponses - accept");
+                        venue_has_shows++;
+                        System.out.println("Spectator : " + getLocalName() + " has a proprosal from " + msg.getSender().getLocalName());
+                        System.out.println("MESSAGE: " + msg.getContent().toString());
+
+                        String[] show = msg.getContent().split("//");
+                        int venue_location = Integer.valueOf(show[0]);
+                        String venue_name = msg.getSender().getLocalName();
+
+                        for (int j = 1; j < show.length; j++) {
+
+                            ArrayList<Object> s = new ArrayList<>();
+                            String[] show_information = show[j].split("::");
+
+                            /*for(String info : show_information) {
+                                System.out.println("Info:" + info.toString());
+                            }*/
+                            //will use ACLMessage for sort
+
+                            String band_name = show_information[0];
+                            int ticket_price = Integer.valueOf(show_information[1]);
+                            int prestige = Integer.valueOf(show_information[2]);
+                            int genre = Integer.valueOf(show_information[3]);
+                            s.add(venue_name);
+                            s.add(venue_location);
+                            s.add(band_name);
+                            s.add(ticket_price);
+                            s.add(prestige);
+                            s.add(genre);
+                            all_shows.add(s);
+                        }
+                        /*
+                        for(ArrayList<Object> asd : all_shows) {
+                            System.out.println("Info:" + asd.toString());
+                        }*/
 
                         break;
-                        /*
-                        String[] show = msg.getContent().split("//");
-                        for (int j = 0; j < show.length; j++) {
-                            String[] tokens = show[i].split("::");
-                        }
-                        */
+
                 }
             }
+
         }
 
         protected void handleAllResultNotifications(Vector resultNotifications) {

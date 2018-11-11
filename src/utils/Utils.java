@@ -138,17 +138,18 @@ public class Utils {
                     aux++; continue;
                 }
 
-                Object[] spectator = new Object[5];
+                Object[] spectator = new Object[6];
                 String[] tokens = line.split(";");
 
                 if (!validInputOfSpectators(tokens))
                     throw new IOException();
 
-                spectator[0] = Integer.parseInt(tokens[0]);
+                spectator[0] = tokens[0];
                 spectator[1] = Integer.parseInt(tokens[1]);
                 spectator[2] = Integer.parseInt(tokens[2]);
                 spectator[3] = Integer.parseInt(tokens[3]);
-                spectator[4] = tokens[4];
+                spectator[4] = Integer.parseInt(tokens[4]);
+                spectator[5] = tokens[5];
 
                 spectatorsInformation.add(spectator);
             }
@@ -192,10 +193,10 @@ public class Utils {
     }
 
     private static boolean validInputOfSpectators(String[] tokens) {
-        if (isValidBudget(Integer.parseInt(tokens[0]))
-                && isValidGenre(Integer.parseInt(tokens[1]), Integer.parseInt(tokens[2]))
-                && isValidLocation(Integer.parseInt(tokens[3]))
-                && isValidSpectatorBehaviour(tokens[4]))
+        if (isValidBudget(Integer.parseInt(tokens[1]))
+                && isValidGenre(Integer.parseInt(tokens[2]), Integer.parseInt(tokens[3]))
+                && isValidLocation(Integer.parseInt(tokens[4]))
+                && isValidSpectatorBehaviour(tokens[5]))
             return true;
         else {
             System.out.println("Error parsing input - spectators.txt");
