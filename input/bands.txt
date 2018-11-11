@@ -1,8 +1,5 @@
 Template : name; genre(0-99); prestige(1-5); min_price(>0); min_attendance(>0)
 Rise Against;90;5;80000;1
-123123;90;5;80000;1
-AAAAA;90;5;80000;1
-ooooooo;88;5;70000;1
 Beethoven;15;5;60000;1
 Quim Barreiros;40;4;30000;1
 In Flames;90;5;20000;1

@@ -1,8 +1,5 @@
-Template : budget(>0); min_genre_spectrum(1-100); max_genre_spectrum(1-100); location(1-5); SPEC_BEHAVIOUR(MOSTBANDS, MOSTPRESTIGE, LEASTDISTANCE, LEASTCOST)
-Tone;100;1;100;3;MOSTBANDS
+Template : budget(>0); min_genre_spectrum(1-100); max_genre_spectrum(1-100); location(1-5); SPEC_BEHAVIOUR(MOSTBANDS, MOSTPRESTIGE, LEASTDISTANCE)
+Tone;100;1;100;3;LEASTDISTANCE
 Ze;100;1;90;3;MOSTBANDS
-Bino;100;1;90;3;MOSTBANDS
-Alfredo;90;1;100;3;MOSTBANDS
-Manuel Jose;90;1;100;3;MOSTBANDS
-Jorge Jesus;90;1;100;3;MOSTBANDS
-Rui Derrotas;90;1;100;3;MOSTBANDS
+Bino;100;1;90;3;LEASTDISTANCE
+Rui Derrotas;90;1;100;3;MOSTPRESTIGE
