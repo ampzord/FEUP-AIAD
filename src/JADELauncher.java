@@ -28,7 +28,7 @@ public class JADELauncher {
 		Profile p4 = new ProfileImpl();
 		p4.setParameter(Profile.CONTAINER_NAME, "Spectators");
 		ContainerController spectators = rt.createAgentContainer(p4);
-
+/*
 		AgentController ac1;
 		try {
 			ac1 = mainContainer.acceptNewAgent("myRMA", new jade.tools.rma.rma());
@@ -36,7 +36,7 @@ public class JADELauncher {
 		} catch (StaleProxyException e) {
 			e.printStackTrace();
 		}
-
+*/
 		/* INIT BANDS */
 		AgentController ac2;
 		try {

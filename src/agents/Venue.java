@@ -120,7 +120,7 @@ public class Venue extends Agent {
     }
 
     private void retry () {
-        //System.out.println("VENUE: " + getLocalName() + " retrying...");
+        System.out.println("VENUE: " + getLocalName() + " retrying...");
 
         getInterestingBands.block();
         show_confirmations.block();
@@ -334,10 +334,10 @@ public class Venue extends Agent {
 
                 line_up_ready = true;
                 addBehaviour(new ReceiveTicketRequest(myAgent, MessageTemplate.MatchPerformative(ACLMessage.CFP)));
-
             }
 
-            removeBehaviour(this);
+            System.out.println("VENUE: finished STEP 1 by " + getLocalName() + " @ [GetInterestingBands]");
+            System.out.println("VENUE: finished STEP 1 by " + getLocalName() + " @ [GetInterestingBands]");
 
             return 0;
         }
@@ -352,6 +352,7 @@ public class Venue extends Agent {
         boolean flag;
 
         public HireBands(Venue v) {
+            venue = v;
             flag = false;
         }
 
@@ -385,6 +386,9 @@ public class Venue extends Agent {
 
         @Override
         public int onEnd() {
+
+            System.out.println("VENUE: finished STEP 2 by " + getLocalName() + " @ [HireBands]");
+
             request_contract = new RequestContractToBand(venue, null);
             addBehaviour(request_contract);
             return 0;
@@ -654,6 +658,13 @@ public class Venue extends Agent {
             // nothing to see here
         }
 
+        @Override
+        public int onEnd() {
+            System.out.println("VENUE: finished STEP 4 by " + getLocalName() + " @ [RequestContractToBand]\n" +
+                    "       venue_proposal.size = " + venue_proposal.size());
+            return 0;
+        }
+
     }
 
     /**
@@ -696,6 +707,10 @@ public class Venue extends Agent {
         protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) {
             ACLMessage result = request.createReply();
 
+            if (venue_proposal.size() == 0) {
+                System.out.println("---------------------------------------------------- venue_proposal.size() = 0 ---- message content = " + request.getOntology());
+            }
+
             if (request.getOntology().equals("Confirming_Presence") || request.getOntology().equals("Ignore_Message") || request.getOntology().equals("Refusing_Show")) {
 
                 switch (request.getOntology()) {
@@ -726,21 +741,25 @@ public class Venue extends Agent {
                         break;
                 }
 
-                //System.out.println("band_responses = " + band_responses + "  &&  venue_proposal.size() = " +  venue_proposal.size() + "  &&   received_refusal = " + received_refusal + "            ---- " + getLocalName());
-                if (band_responses == venue_proposal.size() && !received_refusal) {
+                System.out.println("VENUE: band responses =  " + band_responses + "  &&  venue_proposal.size = " + venue_proposal.size() + "    ----    " + getLocalName());
+
+                if (band_responses == venue_proposal.size()) {
                     if (Utils.DEBUG) {
                         System.out.println();
                         System.out.println("VENUE : " + getLocalName() + " [ConfirmsBandShow] currently has " + shows.size() + " shows. \n" +
                                 "VENUE : " + getLocalName() + " will now try to hire bands with leftover budget (" + budget + ").");
                     }
+
+                    System.out.println("VENUE: finished STEP 3 by " + getLocalName() + " @ [ConfirmsBandShow]");
+
+                    if (shows.size() == 0)
+                        widenSpectrums();
+
+                    resetVariables();
+                    retry();
                 }
-
-                if (shows.size() == 0)
-                    widenSpectrums();
-
-                resetVariables();
-                retry();
             }
+
             return result;
         }
 

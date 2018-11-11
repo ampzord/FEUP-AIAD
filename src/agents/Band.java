@@ -271,8 +271,6 @@ public class Band extends Agent {
             return v;
         }
 
-        //TODO confirming shows to the venue - only prepareRequests answers back, no code needed for the rest of the handles ?
-
         protected void handleAgree(ACLMessage agree) {
 
         }
