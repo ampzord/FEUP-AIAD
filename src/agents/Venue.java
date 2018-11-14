@@ -24,13 +24,13 @@ public class Venue extends Agent {
         MOSTBANDS, MOSTPRESTIGE, MOSTPROFIT;
     }
 
-    private int capacity, budget, min_genre_spectrum, max_genre_spectrum, min_acceptable_prestige, max_acceptable_prestige, location, requests_done, band_responses;
+    private int capacity, budget, min_genre_spectrum, max_genre_spectrum, min_acceptable_prestige, max_acceptable_prestige, location, requests_done, hirings_done, band_responses;
     private DFAgentDescription[] existent_bands;
     private ArrayList<ACLMessage> possible_bands, venue_proposal;
     private ArrayList<ArrayList<Object>> shows;
     private VenueBehaviour behaviour;
-    private boolean received_refusal, line_up_ready;
-    private Behaviour getInterestingBands, show_confirmations, hire_bands, request_contract;
+    private boolean line_up_ready;
+    private Behaviour getInterestingBands, request_contract;
 
     @Override
     public String toString() {
@@ -41,65 +41,23 @@ public class Venue extends Agent {
     public void setCapacity(int capacity) {
         this.capacity = capacity;
     }
-    public int getCapacity() {
-        return this.capacity;
-    }
     public void setBudget(int budget) {
         this.budget = budget;
-    }
-    public int getBudget() {
-        return this.budget;
-    }
-    public int getMin_genre_spectrum() {
-        return min_genre_spectrum;
     }
     public void setMin_genre_spectrum(int min_genre_spectrum) {
         this.min_genre_spectrum = min_genre_spectrum;
     }
-    public int getMax_genre_spectrum() {
-        return max_genre_spectrum;
-    }
     public void setMax_genre_spectrum(int max_genre_spectrum) {
         this.max_genre_spectrum = max_genre_spectrum;
-    }
-    public int getMin_acceptable_prestige() {
-        return min_acceptable_prestige;
     }
     public void setMin_acceptable_prestige(int min_acceptable_prestige) {
         this.min_acceptable_prestige = min_acceptable_prestige;
     }
-    public int getMax_acceptable_prestige() {
-        return max_acceptable_prestige;
-    }
     public void setMax_acceptable_prestige(int max_acceptable_prestige) {
         this.max_acceptable_prestige = max_acceptable_prestige;
     }
-    public DFAgentDescription[] getExistent_bands() {
-        return existent_bands;
-    }
     public void setExistent_bands(DFAgentDescription[] existent_bands) {
         this.existent_bands = existent_bands;
-    }
-    public ArrayList<ACLMessage> getPossible_bands() {
-        return possible_bands;
-    }
-    public void setPossible_bands(ArrayList<ACLMessage> possible_bands) {
-        this.possible_bands = possible_bands;
-    }
-    public ArrayList<ACLMessage> getVenue_proposal() {
-        return venue_proposal;
-    }
-    public void setVenue_proposal(ArrayList<ACLMessage> venue_proposal) {
-        this.venue_proposal = venue_proposal;
-    }
-    public ArrayList<ArrayList<Object>> getShows() {
-        return shows;
-    }
-    public void setShows(ArrayList<ArrayList<Object>> shows) {
-        this.shows = shows;
-    }
-    public int getLocation() {
-        return location;
     }
     public void setLocation(int location) {
         this.location = location;
@@ -116,18 +74,15 @@ public class Venue extends Agent {
     private void startBehaviours() {
         getInterestingBands = new GetInterestingBands(this, new ACLMessage(ACLMessage.REQUEST));
         addBehaviour(getInterestingBands);
-        show_confirmations = new ConfirmsBandShow(this, MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
-        addBehaviour(show_confirmations);
+        addBehaviour(new ConfirmsBandShow(this, MessageTemplate.MatchPerformative(ACLMessage.REQUEST)));
     }
 
     private void retry () {
         //System.out.println("VENUE: " + getLocalName() + " retrying...");
 
         getInterestingBands.block();
-        show_confirmations.block();
         request_contract.block();
         removeBehaviour(getInterestingBands);
-        removeBehaviour(show_confirmations);
         removeBehaviour(request_contract);
 
         startBehaviours();
@@ -145,9 +100,9 @@ public class Venue extends Agent {
         possible_bands = new ArrayList<>();
         venue_proposal = new ArrayList<>();
         shows = new ArrayList<>();
-        received_refusal = false;
         line_up_ready = false;
         requests_done = 0;
+        hirings_done = 0;
         band_responses = 0;
     }
 
@@ -260,9 +215,6 @@ public class Venue extends Agent {
             return v;
         }
 
-        protected void handleAgree(ACLMessage agree) {
-        }
-
         protected void handleRefuse(ACLMessage refuse) {
             if (refuse.getOntology().equals("Give_BusinessCard")) {
                 if (Utils.DEBUG)
@@ -273,14 +225,10 @@ public class Venue extends Agent {
                     if (Utils.DEBUG)
                         System.out.println("VENUE: " + getLocalName() + " [GetInterestingBands] received " + possible_bands.size() + " business cards.");
 
-                    if (possible_bands.size() == 0) {
+                    if (possible_bands.size() == 0)
                         return;
-                    }
-
-                    else {
+                    else
                         hireBands();
-
-                    }
                 }
             }
         }
@@ -305,21 +253,15 @@ public class Venue extends Agent {
                     if(Utils.DEBUG)
                         System.out.println("VENUE: " + getLocalName() + " [GetInterestingBands] received " + possible_bands.size() + " business cards.");
 
-                    if (possible_bands.size() == 0) {
+                    if (possible_bands.size() == 0)
                         return;
-                    }
-                    else {
+                    else
                         hireBands();
-
-                    }
                 }
             }
         }
 
-        protected void handleFailure(ACLMessage failure) {
-            // nothing to see here
-        }
-
+        /* ------------- */
         private void hireBands() {
             switch(behaviour){
                 case MOSTBANDS:
@@ -345,7 +287,6 @@ public class Venue extends Agent {
 
             requests_done = 0;
         }
-        /* ------------- */
 
         private void getMostBandsBehaviour() {
             ArrayList<ACLMessage> ordered_possible_bands = possible_bands;
@@ -354,13 +295,9 @@ public class Venue extends Agent {
             calculateBestBands(ordered_possible_bands);
         }
 
-        //TODO
         private void getMostProfitBehaviour() {
 
             ArrayList<ACLMessage> ordered_possible_bands = possible_bands;
-
-            /*for (ACLMessage band : possible_bands)
-                System.out.println(band.getContent());*/
 
             sortBands(ordered_possible_bands);
             calculateBestBands(ordered_possible_bands);
@@ -582,7 +519,7 @@ public class Venue extends Agent {
         public int onEnd() {
             if (possible_bands.size() == 0) {
 
-                //System.out.println("VENUE: " + getLocalName() + " - " + "No more bands available. Exiting...");
+                System.out.println("VENUE: " + getLocalName() + " - " + "Bands available = " + possible_bands.size() + ". Exiting...");
                 //System.out.println("VENUE: " + getLocalName() + " has " + shows.size() + " shows.");
 
                 line_up_ready = true;
@@ -617,7 +554,8 @@ public class Venue extends Agent {
             Vector<ACLMessage> v = new Vector<>();
 
             if(Utils.DEBUG)
-                System.out.println();
+                System.out.println("VENUE: " + getLocalName() + " venue_proposal.size() = " + venue_proposal.size() + " == " + possible_bands.size() + " = possible_bands.size()");
+
             for(int i=0; i<venue_proposal.size(); i++) {
                 ACLMessage m = new ACLMessage(ACLMessage.REQUEST);
                 m.addReceiver(new AID(venue_proposal.get(i).getSender().getLocalName(), false));
@@ -631,43 +569,37 @@ public class Venue extends Agent {
             return v;
         }
 
-        protected void handleAgree(ACLMessage agree) {
-            // nothing to see here
-        }
-
         protected void handleRefuse(ACLMessage refuse) {
             if (refuse.getOntology().equals("Hiring")) {
-                requests_done++;
-                if (venue_proposal.size() == requests_done) {
-                    requests_done = 0;
+                hirings_done++;
+                if (venue_proposal.size() == hirings_done) {
+                    if(Utils.DEBUG)
+                        System.out.println("VENUE: " + getLocalName() + " resolved all hiring responses [RequestContract].");
+                    hirings_done = 0;
                 }
             }
         }
 
         protected void handleInform(ACLMessage inform) {
             if (inform.getOntology().equals("Hiring")) {
-                requests_done++;
+                hirings_done++;
 
                 if(Utils.DEBUG)
                     System.out.println("VENUE: " + getLocalName() + " received [RequestContract] INFORM " + inform.getContent() + " from " + inform.getSender().getLocalName());
 
-                //possible_bands.add(inform);
-                if (venue_proposal.size() == requests_done) {
-                    requests_done = 0;
+                if (venue_proposal.size() == hirings_done) {
+                    if(Utils.DEBUG)
+                        System.out.println("VENUE: " + getLocalName() + " resolved all hiring responses [RequestContract].");
+                    hirings_done = 0;
                 }
             }
         }
 
-        protected void handleFailure(ACLMessage failure) {
-            // nothing to see here
-        }
-
         @Override
         public int onEnd() {
-            //System.out.println("VENUE: finished STEP 3 by " + getLocalName() + " @ [RequestContractToBand]\n" +"       venue_proposal.size = " + venue_proposal.size());
+            getAgent().removeBehaviour(request_contract);
             return 0;
         }
-
     }
 
     /**
@@ -701,7 +633,6 @@ public class Venue extends Agent {
                     case "Refusing_Show":
                         reply.setOntology("Refusing_Show");
                         reply.setContent("Thank you for considering");
-                        received_refusal = true;
                         break;
                 }
 
@@ -792,8 +723,8 @@ public class Venue extends Agent {
             possible_bands = new ArrayList<>();
             venue_proposal = new ArrayList<>();
             requests_done = 0;
+            hirings_done = 0;
             band_responses = 0;
-            received_refusal = false;
         }
 
     }
@@ -808,7 +739,7 @@ public class Venue extends Agent {
         }
 
         protected ACLMessage handleCfp(ACLMessage cfp) {
-            if (Utils.DEBUG)
+            //if (Utils.DEBUG)
                 System.out.println("VENUE: " + getAID().getLocalName() + " [ReceiveTicketRequest] received " + cfp.getContent() + " from " + cfp.getSender().getLocalName());
 
             ACLMessage reply = cfp.createReply();

@@ -1,4 +1,7 @@
 Template : name;capacity(>0; 1 means 1000); budget(>0); min_genre_spectrum(0-99); max_genre_spectrum(0-99); min_acceptable_prestige(1-5); max_acceptable_prestige(1-5); location(1-5); behaviour(MOSTPRESTIGE, MOSTBANDS, MOSTPROFIT)
-Casa da Musica;5;100000;75;99;3;5;1;MOSTBANDS
-Outro Sitio;4;90000;10;60;3;5;2;MOSTBANDS
-Cave 45;3;50000;40;80;2;4;3;MOSTBANDS
+Casa da Musica;5;100000;1;50;3;5;1;MOSTPRESTIGE
+Meo Arena;6;140000;51;100;3;5;1;MOSTPRESTIGE
+Coliseu do Porto;4;90000;51;100;3;5;2;MOSTPROFIT
+Coliseu dos Recreios;4;90000;1;50;3;5;2;MOSTPROFIT
+Cave 45;3;50000;51;100;2;4;3;MOSTBANDS
+Casino Estoril;3;50000;1;50;2;4;3;MOSTBANDS

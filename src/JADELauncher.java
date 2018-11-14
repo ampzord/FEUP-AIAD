@@ -49,7 +49,6 @@ public class JADELauncher {
 				ac2.start();
 			}
 
-
 		} catch (StaleProxyException e) {
 			e.printStackTrace();
 		}
@@ -82,6 +81,7 @@ public class JADELauncher {
 				spectatorQueue.add(ac4);
 			}
 
+            System.out.println("spectatorQueue.size() = " + spectatorQueue.size());
 			spectatorQueue.poll().start();
 
 			//System.out.println("\n--- Spectators ---\n");

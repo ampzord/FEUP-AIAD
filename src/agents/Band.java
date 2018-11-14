@@ -17,7 +17,7 @@ import javafx.util.Pair;
 
 public class Band extends Agent {
 
-    private int genre, prestige, min_price, min_attendance, current_shows, business_cards_handed;
+    private int genre, prestige, min_price, min_attendance, current_shows, business_cards_handed, card_requests_received;
     private ArrayList<Pair<String, Integer>> all_proposals;
 
     @Override
@@ -27,32 +27,17 @@ public class Band extends Agent {
                 this.genre, this.prestige, this.min_price, this.min_attendance);
     }
 
-    public int getGenre() {
-        return genre;
-    }
     public void setGenre(int genre) {
         this.genre = genre;
-    }
-    public int getPrestige() {
-        return prestige;
     }
     public void setPrestige(int prestige) {
         this.prestige = prestige;
     }
-    public int getMin_price() {
-        return min_price;
-    }
     public void setMin_price(int min_price) {
         this.min_price = min_price;
     }
-    public int getMin_attendance() {
-        return min_attendance;
-    }
     public void setMin_attendance(int min_attendance) {
         this.min_attendance = min_attendance;
-    }
-    public int getCurrent_shows() {
-        return current_shows;
     }
     public void setCurrent_shows(int current_shows) {
         this.current_shows = current_shows;
@@ -91,6 +76,31 @@ public class Band extends Agent {
         } catch(FIPAException fe) {
             fe.printStackTrace();
         }
+    }
+
+    private int searchVenues() {
+        DFAgentDescription template = new DFAgentDescription();
+        ServiceDescription sd = new ServiceDescription();
+        sd.setType("venue");
+        template.addServices(sd);
+
+        try {
+            DFAgentDescription[] result = DFService.search(this, template);
+
+            if(Utils.DEBUG){
+                System.out.println("BAND: " + getLocalName() + " found:");
+                for(int i=0; i<result.length; ++i) {
+                    System.out.println("Venue: " + "    " + result[i].getName().getLocalName());
+                }
+            }
+
+            return result.length;
+
+        } catch(FIPAException fe) {
+            fe.printStackTrace();
+        }
+
+        return 0;
     }
 
     public void takeDown() {
@@ -132,14 +142,16 @@ public class Band extends Agent {
                     int min_genre_spectrum = Integer.parseInt(tokens[1]);
                     int max_genre_spectrum = Integer.parseInt(tokens[2]);
 
-                    if (evaluateAcceptance(attendance, min_genre_spectrum, max_genre_spectrum) && current_shows < Utils.MAX_SHOWS_PER_BAND) {
+                    if (evaluateAcceptance(attendance, min_genre_spectrum, max_genre_spectrum) && current_shows < Utils.MAX_SHOWS_PER_BAND && card_requests_received < searchVenues()) {
                         reply.setPerformative(ACLMessage.AGREE);
                         reply.setOntology("Give_BusinessCard");
+                        business_cards_handed++;
                     } else {
                         reply.setPerformative(ACLMessage.REFUSE);
                         reply.setOntology("Give_BusinessCard");
                     }
 
+                    card_requests_received++;
                     break;
 
                 case "Hiring":
@@ -163,7 +175,6 @@ public class Band extends Agent {
 
         protected ACLMessage prepareResultNotification(ACLMessage request, ACLMessage response) {
             ACLMessage result = request.createReply();
-            //System.out.println("BAND: " + getLocalName() + " ----- " + business_cards_handed + " must be == to proposals.size");
 
             switch (request.getOntology()) {
                 case "Give_BusinessCard":
@@ -171,7 +182,6 @@ public class Band extends Agent {
                     result.setContent(content);
                     result.setPerformative(ACLMessage.INFORM);
                     result.setOntology("Give_BusinessCard");
-                    business_cards_handed++;
                     break;
 
                 case "Hiring" :
@@ -179,7 +189,6 @@ public class Band extends Agent {
                     result.setPerformative(ACLMessage.INFORM);
                     result.setOntology("Hiring");
 
-                    //System.out.println("BAND: " + " ------ business_cards_handed = " + business_cards_handed + "  &&  all_proposals.size = " + all_proposals.size() + " ------------ " + getLocalName());
                     if (business_cards_handed == all_proposals.size() && business_cards_handed > 0) {
                         business_cards_handed = 0;
 
@@ -221,12 +230,6 @@ public class Band extends Agent {
                     }
                 }
             }
-        }
-
-        @Override
-        public int onEnd() {
-            System.out.println("Band communication to Venue has ended!");
-            return 0;
         }
     }
 
@@ -301,7 +304,7 @@ public class Band extends Agent {
 
         @Override
         public int onEnd() {
-            //System.out.println("BAND: " + getLocalName() + " finished informing all venues. Ending...");
+            System.out.println("BAND: " + getLocalName() + " finished informing all venues. Ending...");
             myAgent.removeBehaviour(this);
             return 0;
         }

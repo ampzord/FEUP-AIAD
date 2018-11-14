@@ -124,12 +124,15 @@ public class Spectator extends Agent {
 
         protected Vector prepareCfps(ACLMessage cfp) {
             Vector v = new Vector();
-            System.out.println();
+            System.out.println("SPECTATOR: " + getLocalName() + " found " + existent_venues.length + " with DF.\n" +
+                    "      also, queue size = " + queue.size());
 
             for (int i = 0; i < existent_venues.length; i++) {
                 cfp.addReceiver(new AID(existent_venues[i].getName().getLocalName(), false));
-                //System.out.println(getLocalName() + " - Sending Call For Proposal (CFP) to " + existent_venues[i].getName().getLocalName());
+                if (Utils.DEBUG)
+                    System.out.println("SPECTATOR: " + getLocalName() + " - Sending Call For Proposal (CFP) to " + existent_venues[i].getName().getLocalName());
             }
+
             cfp.setContent(getLocalName() + " is the Venue ready?");
             v.add(cfp);
             return v;
@@ -143,7 +146,8 @@ public class Spectator extends Agent {
 
                 switch (msg.getPerformative()) {
                     case ACLMessage.REFUSE:
-                        //retry();
+                        if (Utils.DEBUG)
+                            System.out.println("SPECTATOR: " + getLocalName() + " received a not ready from " + msg.getSender().getLocalName());
                         break;
                     case ACLMessage.PROPOSE:
                         //venue_has_shows++;
@@ -179,7 +183,7 @@ public class Spectator extends Agent {
             }
 
             if (wanted_shows.size() <= 0) {
-                System.out.println("SPECTATOR: " + getLocalName() + " no more shows available.");
+                System.out.println("SPECTATOR: " + getLocalName() + " has no interesting shows to go to.");
             } else {
                 if (Utils.DEBUG)
                     for (ACLMessage m : wanted_shows)
@@ -237,7 +241,7 @@ public class Spectator extends Agent {
             }
         }
 
-        protected void	handleFailure(ACLMessage failure) {
+        protected void handleFailure(ACLMessage failure) {
             System.out.println("--------------==================RETRY==============----------------");
         }
 
@@ -327,7 +331,6 @@ public class Spectator extends Agent {
                     }
                 }
         }
-
 
         private void sortShowsByLowestPrice(ArrayList<ACLMessage> shows) {
             int n = shows.size();

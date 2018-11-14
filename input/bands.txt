@@ -1,8 +1,13 @@
 Template : name; genre(0-99); prestige(1-5); min_price(>0); min_attendance(>0)
-Rise Against;90;5;80000;1
-Beethoven;15;5;60000;1
-Quim Barreiros;40;4;30000;1
-In Flames;90;5;20000;1
-Babushka;90;4;10000;1
-Muse;90;4;30000;1
-Metallica;30;3;10000;1
+Rise Against;90;5;80000;4
+Beethoven;15;5;60000;4
+Quim Barreiros;40;4;30000;3
+In Flames;90;5;20000;3
+Babushka;90;4;10000;2
+Muse;90;4;30000;2
+Metallica;30;3;10000;2
+Zeca Afonso;55;3;5000;1
+Bach;5;3;4000;1
+Os Tais;70;2;2500;1
+Banda do CR;75;1;2000;1
+Pinheads;65;1;1000;1
