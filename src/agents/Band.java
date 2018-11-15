@@ -127,7 +127,7 @@ public class Band extends Agent {
             super(a, mt);
         }
 
-        protected ACLMessage handleRequest(ACLMessage request) throws RefuseException {
+        protected ACLMessage handleRequest(ACLMessage request) {
             if(Utils.DEBUG)
                 System.out.println("BAND: " + getLocalName() + " [VenueRequestResponder] received " + request.getOntology() + " from " + request.getSender().getLocalName());
             ACLMessage reply = request.createReply();
@@ -164,8 +164,10 @@ public class Band extends Agent {
                     if (current_shows < Utils.MAX_SHOWS_PER_BAND) {
                         reply.setPerformative(ACLMessage.AGREE);
                         reply.setOntology("Hiring");
-                    } else
-                        throw new RefuseException("Refused Request");
+                    } else {
+                        reply.setPerformative(ACLMessage.REFUSE);
+                        reply.setOntology("Hiring");
+                    }
 
                     break;
             }

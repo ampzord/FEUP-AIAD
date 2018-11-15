@@ -62,29 +62,27 @@ public class Venue extends Agent {
     public void setLocation(int location) {
         this.location = location;
     }
+    private void setBehaviour(String name) {
+        switch (name) {
+            case "MOSTBANDS":
+                behaviour = VenueBehaviour.MOSTBANDS;
+                break;
+
+            case "MOSTPROFIT":
+                behaviour = VenueBehaviour.MOSTPROFIT;
+                break;
+
+            case "MOSTPRESTIGE":
+                behaviour = VenueBehaviour.MOSTPRESTIGE;
+                break;
+        }
+    }
 
     public void setup() {
         setVenueInformation();
         printVenueInformation();
         registerToDFService();
         searchBands();
-        startBehaviours();
-    }
-
-    private void startBehaviours() {
-        getInterestingBands = new GetInterestingBands(this, new ACLMessage(ACLMessage.REQUEST));
-        addBehaviour(getInterestingBands);
-        addBehaviour(new ConfirmsBandShow(this, MessageTemplate.MatchPerformative(ACLMessage.REQUEST)));
-    }
-
-    private void retry () {
-        //System.out.println("VENUE: " + getLocalName() + " retrying...");
-
-        getInterestingBands.block();
-        request_contract.block();
-        removeBehaviour(getInterestingBands);
-        removeBehaviour(request_contract);
-
         startBehaviours();
     }
 
@@ -106,24 +104,22 @@ public class Venue extends Agent {
         band_responses = 0;
     }
 
-    private void setBehaviour(String name) {
-        switch (name) {
-            case "MOSTBANDS":
-                behaviour = VenueBehaviour.MOSTBANDS;
-                break;
-
-            case "MOSTPROFIT":
-                behaviour = VenueBehaviour.MOSTPROFIT;
-                break;
-
-            case "MOSTPRESTIGE":
-                behaviour = VenueBehaviour.MOSTPRESTIGE;
-                break;
-        }
-    }
-
     private void printVenueInformation() {
         System.out.println(this.toString());
+    }
+
+    private void registerToDFService() {
+        DFAgentDescription dfd = new DFAgentDescription();
+        dfd.setName(getAID());
+        ServiceDescription sd = new ServiceDescription();
+        sd.setType("venue");
+        sd.setName(getLocalName());
+        dfd.addServices(sd);
+        try {
+            DFService.register(this, dfd);
+        } catch(FIPAException fe) {
+            fe.printStackTrace();
+        }
     }
 
     private void searchBands() {
@@ -147,25 +143,29 @@ public class Venue extends Agent {
         }
     }
 
-    private void registerToDFService() {
-        DFAgentDescription dfd = new DFAgentDescription();
-        dfd.setName(getAID());
-        ServiceDescription sd = new ServiceDescription();
-        sd.setType("venue");
-        sd.setName(getLocalName());
-        dfd.addServices(sd);
-        try {
-            DFService.register(this, dfd);
-        } catch(FIPAException fe) {
-            fe.printStackTrace();
-        }
+    private void startBehaviours() {
+        getInterestingBands = new GetInterestingBands(this, new ACLMessage(ACLMessage.REQUEST));
+        addBehaviour(getInterestingBands);
+        addBehaviour(new ConfirmsBandShow(this, MessageTemplate.MatchPerformative(ACLMessage.REQUEST)));
+    }
+
+    private void retry () {
+        if (Utils.DEBUG)
+            System.out.println("VENUE: " + getLocalName() + " retrying...");
+
+        getInterestingBands.block();
+        request_contract.block();
+        removeBehaviour(getInterestingBands);
+        removeBehaviour(request_contract);
+
+        startBehaviours();
     }
 
     public void takeDown() {
         unregisterFromDFService();
 
         if(Utils.DEBUG)
-            System.out.println("VENUE : " + getLocalName() + " done working");
+            System.out.println("VENUE : " + getLocalName() + " done working.");
     }
 
     private void unregisterFromDFService() {
@@ -259,6 +259,28 @@ public class Venue extends Agent {
                         hireBands();
                 }
             }
+        }
+
+        @Override
+        public int onEnd() {
+            if (possible_bands.size() == 0) {
+
+                System.out.println("VENUE: " + getLocalName() + " - " + "Bands available = " + possible_bands.size() + ". Exiting...");
+                //System.out.println("VENUE: " + getLocalName() + " has " + shows.size() + " shows.");
+
+                line_up_ready = true;
+
+                System.out.println("VENUE: " + getLocalName() + " has " + shows.size() + " shows:");
+                for (ArrayList<Object> show : shows) {
+                    System.out.println("        " + show.get(0)+ " -- ticket price: " + show.get(1));
+                }
+
+                addBehaviour(new ReceiveTicketRequest(myAgent, MessageTemplate.MatchPerformative(ACLMessage.CFP)));
+            }
+
+            //System.out.println("VENUE: finished STEP 1 by " + getLocalName() + " @ [GetInterestingBands]");
+
+            return 0;
         }
 
         /* ------------- */
@@ -515,27 +537,6 @@ public class Venue extends Agent {
             return prestige*prestige;
         }
 
-        @Override
-        public int onEnd() {
-            if (possible_bands.size() == 0) {
-
-                System.out.println("VENUE: " + getLocalName() + " - " + "Bands available = " + possible_bands.size() + ". Exiting...");
-                //System.out.println("VENUE: " + getLocalName() + " has " + shows.size() + " shows.");
-
-                line_up_ready = true;
-
-                System.out.println("VENUE: " + getLocalName() + " has " + shows.size() + " shows:");
-                for (ArrayList<Object> show : shows) {
-                    System.out.println("        " + show.get(0)+ " -- ticket price: " + show.get(1));
-                }
-
-                addBehaviour(new ReceiveTicketRequest(myAgent, MessageTemplate.MatchPerformative(ACLMessage.CFP)));
-            }
-
-            //System.out.println("VENUE: finished STEP 1 by " + getLocalName() + " @ [GetInterestingBands]");
-
-            return 0;
-        }
     }
 
     /**
