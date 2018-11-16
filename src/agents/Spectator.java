@@ -124,8 +124,6 @@ public class Spectator extends Agent {
 
         protected Vector prepareCfps(ACLMessage cfp) {
             Vector v = new Vector();
-            System.out.println("SPECTATOR: " + getLocalName() + " found " + existent_venues.length + " with DF.\n" +
-                    "      also, queue size = " + queue.size());
 
             for (int i = 0; i < existent_venues.length; i++) {
                 cfp.addReceiver(new AID(existent_venues[i].getName().getLocalName(), false));
@@ -182,7 +180,7 @@ public class Spectator extends Agent {
 
             }
 
-            if (wanted_shows.size() <= 0) {
+            if (wanted_shows.size() == 0) {
                 System.out.println("SPECTATOR: " + getLocalName() + " has no interesting shows to go to.");
             } else {
                 if (Utils.DEBUG)

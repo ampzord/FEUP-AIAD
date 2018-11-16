@@ -1,5 +1,5 @@
-Template : budget(>0); min_genre_spectrum(1-100); max_genre_spectrum(1-100); location(1-5); SPEC_BEHAVIOUR(MOSTBANDS, MOSTPRESTIGE, LEASTDISTANCE)
-Tone;100;1;100;3;LEASTDISTANCE
-Ze;100;1;90;3;MOSTBANDS
-Bino;100;1;90;3;LEASTDISTANCE
-Rui Derrotas;90;1;100;3;MOSTPRESTIGE
+Template : budget(>0); min_genre_spectrum(1-100); max_genre_spectrum(1-100); location(1-5); SPEC_BEHAVIOUR(MOSTBANDS, MOSTPRESTIGE)
+Tone;200;1;100;3;MOSTPRESTIGE
+Ze;200;1;90;3;MOSTBANDS
+Bino;200;1;90;3;MOSTBANDS
+Rui Derrotas;200;1;100;3;MOSTPRESTIGE
